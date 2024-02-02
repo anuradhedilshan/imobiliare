@@ -32,4 +32,4 @@
     git pull
     ```
 
-Feel free to copy and paste these commands for easy execution! If you have any questions, feel free to ask. 🚀👨‍💻
+Feel free to copy and paste these commands for easy execution! If you have any questions, feel free to ask.s 🚀👨‍💻
