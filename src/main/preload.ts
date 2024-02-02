@@ -1,29 +1,42 @@
 // Disable no-unused-vars, broken for spread args
 /* eslint no-unused-vars: off */
-import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
+import { ipcRenderer } from 'electron';
+import { LocationType, filterDataType } from '../renderer/filter/types.d';
 
-export type Channels = 'ipc-example';
-
-const electronHandler = {
-  ipcRenderer: {
-    sendMessage(channel: Channels, ...args: unknown[]) {
-      ipcRenderer.send(channel, ...args);
-    },
-    on(channel: Channels, func: (...args: unknown[]) => void) {
-      const subscription = (_event: IpcRendererEvent, ...args: unknown[]) =>
-        func(...args);
-      ipcRenderer.on(channel, subscription);
-
-      return () => {
-        ipcRenderer.removeListener(channel, subscription);
-      };
-    },
-    once(channel: Channels, func: (...args: unknown[]) => void) {
-      ipcRenderer.once(channel, (_event, ...args) => func(...args));
-    },
+const IPCMainHandler = {
+  getSuggestLocations: async (e: string): Promise<LocationType[]> => {
+    const data = await ipcRenderer.invoke('getSuggestLocations', e);
+    return data;
+  },
+  startAll: (filters: filterDataType, filepath: string) => {
+    ipcRenderer.send('start', { filters, filepath });
+  },
+  onEvent: null,
+  onStatus: null,
+  openPathDialog: async () => {
+    const e = await ipcRenderer.invoke('openPathDialog');
+    return e.filePaths;
   },
 };
 
-contextBridge.exposeInMainWorld('electron', electronHandler);
+window.IPCMainHandler = IPCMainHandler;
 
-export type ElectronHandler = typeof electronHandler;
+function sendEvent(
+  Type: 'progress' | 'count' | 'complete' | 'error' | 'details' | 'warn',
+  message: number | boolean | string | null,
+) {
+  if (window.IPCMainHandler.onEvent)
+    window.IPCMainHandler.onEvent(Type, message);
+}
+
+ipcRenderer.on('event', (_e, arg) => {
+  console.log('onEvent');
+
+  sendEvent(arg.Type, arg.p);
+});
+
+ipcRenderer.on('dataUpdate', (_e, arg) => {
+  if (window.IPCMainHandler.onStatus) window.IPCMainHandler.onStatus(arg);
+});
+
+export type ElectronHandler = typeof IPCMainHandler;

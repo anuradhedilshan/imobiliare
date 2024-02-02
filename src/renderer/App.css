@@ -2,10 +2,12 @@
  * @NOTE: Prepend a `~` to css file paths that are in your node_modules
  *        See https://github.com/webpack-contrib/sass-loader#imports
  */
+
+* {
+  margin: 0;
+  padding: 0;
+}
 body {
-  position: relative;
-  color: white;
-  height: 100vh;
   background: linear-gradient(
     200.96deg,
     #fedc2a -29.09%,
@@ -13,50 +15,34 @@ body {
     #7a2c9e 129.35%
   );
   font-family: sans-serif;
-  overflow-y: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
-button {
-  background-color: white;
-  padding: 10px 20px;
-  border-radius: 10px;
-  border: none;
-  appearance: none;
-  font-size: 1.3rem;
-  box-shadow: 0px 8px 28px -6px rgba(24, 39, 75, 0.12),
-    0px 18px 88px -4px rgba(24, 39, 75, 0.14);
-  transition: all ease-in 0.1s;
-  cursor: pointer;
-  opacity: 0.9;
+/* custom css */
+.error {
+  color: red;
+}
+.warn {
+  color: yellow;
 }
 
-button:hover {
-  transform: scale(1.05);
-  opacity: 1;
+.details {
+  color: #3795f6;
 }
 
-li {
-  list-style: none;
+.log b {
+  color: #0fcc45;
 }
 
-a {
-  text-decoration: none;
-  height: fit-content;
-  width: fit-content;
-  margin: 10px;
+.console-content::-webkit-scrollbar {
+  width: 10px; /* Set the width of the scrollbar */
 }
 
-a:hover {
-  opacity: 1;
-  text-decoration: none;
+.console-content::-webkit-scrollbar-thumb {
+  background-color: #555; /* Color of the scrollbar thumb */
+  border-radius: 5px; /* Radius of the scrollbar thumb */
 }
 
-.Hello {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 20px 0;
+.console-content::-webkit-scrollbar-track {
+  background-color: #333; /* Color of the scrollbar track */
+  border-radius: 5px; /* Radius of the scrollbar track */
 }
