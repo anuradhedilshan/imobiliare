@@ -10,7 +10,9 @@ import {
   CardActions,
   CardContent,
   CardHeader,
+  Checkbox,
   FormControl,
+  FormControlLabel,
   InputAdornment,
   MenuItem,
   Paper,
@@ -79,11 +81,22 @@ const intial: filterDataType = {
   proprietate: Proprietate.apartment,
   tranzactie: Tranzactie.Devânzare,
 };
+const getAllOverCountryOption = {
+  id: 9999999,
+  nume: 'Get All Over Country',
+  nume_localitate: 'Get All Over Country',
+  id_localitate: 9999999,
+  label: 'Get All Over Country',
+};
 
 export default function Filter() {
   const previousController = useRef();
   const [filter, setFilter] = useState<filterDataType>(intial);
-  const [suggests, setSuggests] = useState(intialsuggests);
+  const [checked, setChecked] = useState(false);
+  const [suggests, setSuggests] = useState([
+    getAllOverCountryOption,
+    ...intialsuggests,
+  ]);
   const [fpath, SetPath] = useState('');
 
   const handler = (
@@ -98,12 +111,17 @@ export default function Filter() {
   const [loading, setLoading] = useState(true);
   const autoCompletehandler = (event: SyntheticEvent) => {
     setLoading(true);
-    setSuggests(intialsuggests);
     window.IPCMainHandler.getSuggestLocations(event.target.value as string)
       .then((d: LocationType[]) => {
-        console.log(d);
+        console.log(':After set', [
+          getAllOverCountryOption,
+          ...d.filter((e) => e.id_localitate),
+        ]);
 
-        setSuggests(d.filter((e) => e.id_localitate));
+        setSuggests([
+          getAllOverCountryOption,
+          ...d.filter((e) => e.id_localitate),
+        ]);
         setLoading(false);
       })
       .catch((e: Error) => {
