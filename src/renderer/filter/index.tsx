@@ -81,12 +81,15 @@ const intial: filterDataType = {
   proprietate: Proprietate.apartment,
   tranzactie: Tranzactie.Devânzare,
 };
-const getAllOverCountryOption = {
+const getAllOverCountryOption: LocationType = {
   id: 9999999,
   nume: 'Get All Over Country',
   nume_localitate: 'Get All Over Country',
   id_localitate: 9999999,
-  label: 'Get All Over Country',
+  id_judet: '',
+  nume_judet: '',
+  tip: 0,
+  id_zona: '',
 };
 
 export default function Filter() {
