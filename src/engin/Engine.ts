@@ -35,8 +35,6 @@ const headers: RawAxiosRequestHeaders = {
 axiosRetry(axios, {
   retries: 3,
   retryCondition(error: AxiosError): boolean {
-    console.log('tetried');
-
     if (error.response?.status === 400) {
       logger?.warn('Invalid Filter Options');
       return false;
@@ -44,7 +42,7 @@ axiosRetry(axios, {
     return true;
   },
   retryDelay(retryCount, error) {
-    return retryCount * 1000;
+    return retryCount * 5000;
   },
 });
 
@@ -114,11 +112,18 @@ async function startAll(
   webcontent.reply('dataUpdate', { total, titlu, categorie, tranzactie });
   // Runner
   for (let loop = 0; loop <= total; loop += Thread) {
+    logger?.warn(`Total : ${total} -  loop :  ${loop}`);
     const promises = [];
     let failed = 0;
     const Data: any[] = [];
     const failedReq: string[] = [];
-    const a = await getAnunturis(2, 4, 13822, loop, Thread);
+    const a = await getAnunturis(
+      filters.tranzactie,
+      filters.proprietate,
+      filters.localitate.id_localitate,
+      loop,
+      Thread,
+    );
     for (const i of a.anunturi) {
       await sleep(100);
       promises.push(
@@ -130,12 +135,13 @@ async function startAll(
             delete data.data.poze;
             Data.push(data.data);
             count += 1;
-            return data;
+            return i.id;
           })
           .catch((e: Error) => {
             logger?.error(`Reqest Failed ${i.id} : ${e.message}`);
             failed += 1;
             failedReq.push(i.id);
+            return i.id;
           }),
       );
     }

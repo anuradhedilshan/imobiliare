@@ -17,7 +17,6 @@ function Logger_View({ logger_Data }: { logger_Data: string }) {
             border: '1px solid black',
             mt: 2,
             position: 'relative',
-
             display: 'block',
             minHeight: expand ? '500px' : '300px',
             maxHeight: 200,

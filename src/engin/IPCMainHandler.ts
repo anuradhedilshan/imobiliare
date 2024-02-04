@@ -50,7 +50,6 @@ export async function loadSuggestlocalitate(
   ).json();
   pre = text;
   data = s.sugestii;
-  console.log(data);
   return data;
 }
 
