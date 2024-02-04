@@ -5,7 +5,11 @@
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import axios, { AxiosResponse, RawAxiosRequestHeaders } from 'axios';
+import axios, {
+  AxiosError,
+  AxiosResponse,
+  RawAxiosRequestHeaders,
+} from 'axios';
 import axiosRetry from 'axios-retry';
 import { IpcMainEvent } from 'electron';
 import he from 'he';
@@ -14,6 +18,7 @@ import { filterDataType } from '../renderer/filter/types.d';
 import Logger from './Logger';
 import JSONWriter from './JSONWriter';
 
+let logger: Logger | null = null;
 function sleep(ms: number): Promise<unknown> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -27,10 +32,24 @@ const headers: RawAxiosRequestHeaders = {
 };
 
 // Configure axios to use axios-retry
-axiosRetry(axios, { retries: 3, retryDelay: axiosRetry.exponentialDelay });
+axiosRetry(axios, {
+  retries: 3,
+  retryCondition(error: AxiosError): boolean {
+    console.log('tetried');
+
+    if (error.response?.status === 400) {
+      logger?.warn('Invalid Filter Options');
+      return false;
+    }
+    return true;
+  },
+  retryDelay(retryCount, error) {
+    return retryCount * 1000;
+  },
+});
 
 // getAdList
-async function getAnunturis(
+export async function getAnunturis(
   t: Tranzactie,
   c: Proprietate,
   l: string | number,
@@ -46,7 +65,7 @@ async function getAnunturis(
       throw new Error('request failed');
     return data.data;
   } catch (e) {
-    console.error(e);
+    logger?.error(`Reqest tried 3 times due to : <b>${e}</b> @getAnunturis`);
     return null;
   }
 }
@@ -59,7 +78,6 @@ async function getAnunturi(id: string): Promise<AxiosResponse> {
 }
 
 const Thread = 4;
-let logger: Logger | null = null;
 
 function setLoggerCallback(cb: CB): Logger {
   logger = new Logger(cb);

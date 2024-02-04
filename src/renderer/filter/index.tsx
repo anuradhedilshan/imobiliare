@@ -197,7 +197,7 @@ export default function Filter() {
                 value={filter.tranzactie as unknown as string}
                 onChange={handler}
                 name="tranzactie"
-                autoWidth
+                fullWidth
                 variant="standard"
                 label="Introdu localitate, zone, ansambluri"
               >
@@ -238,7 +238,15 @@ export default function Filter() {
           </div>
         </CardContent>
         <CardActions>
-          <Button size="small">Share</Button>
+          <Button
+            size="medium"
+            onClick={() => {
+              window.IPCMainHandler.getDataStatus(filter);
+            }}
+            variant="outlined"
+          >
+            getStatus
+          </Button>
           <Button
             variant="contained"
             size="medium"

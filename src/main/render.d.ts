@@ -7,6 +7,7 @@ export interface IPCMainHandler {
   onEvent: CB | null;
   onStatus: ((arg: any) => void) | null;
   openPathDialog: () => Promise<any>;
+  getDataStatus: (filter: filterDataType) => void;
 }
 
 declare global {

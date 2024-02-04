@@ -2,8 +2,9 @@
 /* eslint no-unused-vars: off */
 import { ipcRenderer } from 'electron';
 import { LocationType, filterDataType } from '../renderer/filter/types.d';
+import { IPCMainHandler as IPCMainHandlerType } from './render';
 
-const IPCMainHandler = {
+const IPCMainHandler: IPCMainHandlerType = {
   getSuggestLocations: async (e: string): Promise<LocationType[]> => {
     const data = await ipcRenderer.invoke('getSuggestLocations', e);
     return data;
@@ -16,6 +17,9 @@ const IPCMainHandler = {
   openPathDialog: async () => {
     const e = await ipcRenderer.invoke('openPathDialog');
     return e.filePaths;
+  },
+  async getDataStatus(filter: filterDataType) {
+    ipcRenderer.send('getDataStatus', filter);
   },
 };
 

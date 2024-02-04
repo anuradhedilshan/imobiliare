@@ -12,16 +12,17 @@ export default class App extends React.Component {
     return (
       <Grid
         container
-        spacing={0.7}
+        spacing={2}
         direction="row"
         justifyContent="space-between"
         alignItems="center"
-        padding={2}
+        padding={1}
+        overflow="auto"
       >
-        <Grid xs={5}>
+        <Grid item xs={5}>
           <Filter />
         </Grid>
-        <Grid xs="auto">
+        <Grid item xs={7}>
           <Dataview />
         </Grid>
       </Grid>
