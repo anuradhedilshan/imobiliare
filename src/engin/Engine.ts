@@ -55,12 +55,15 @@ export async function getAnunturis(
   l: string | number,
   offset: number,
   limit: number,
+  proxy: Proxy | null,
 ): Promise<any> {
   const url = `https://apirm.imobiliare.ro/2.2/anunturi?tranzactie=${t}&categorie=${c}${
     /* &tip_proprietate=2,3,1,4 */ ''
   }&localitati=${l}&sortare=sctl&offset=${offset}&limit=${limit}`;
   try {
-    const { status, data } = await axios.get(url, { headers });
+    const { status, data } = await (proxy
+      ? proxy.fetch(url, headers)
+      : axios.get(url, { headers }));
     if (status !== 200 || data.status !== 'success')
       throw new Error('request failed');
     return data.data;
@@ -107,12 +110,14 @@ async function startAll(
   logger?.warn(`Prosess Started...${JSON.stringify(filters)}`);
   let count = 0;
   // getAdsCount
+  const p = await proxylist.getProxy();
   const ads = await getAnunturis(
     filters.tranzactie,
     filters.proprietate,
     filters.localitate.id_localitate,
     0,
     0,
+    p,
   );
   if (!ads) {
     logger?.error('getAdsCount Failed In Engine.ts');
@@ -122,6 +127,8 @@ async function startAll(
       categorie: 'N/A',
       tranzactie: 'N/A',
     });
+    onEvent('complete', 'Failed');
+    return;
   }
   const { total, titlu, categorie, tranzactie } = ads as any;
   const Writer = new JSONWriter(`${filepath}/${he.decode(titlu)}`);
@@ -135,28 +142,14 @@ async function startAll(
     const promises = [];
     let failed = 0;
     const Data: any[] = [];
-    let proxy: Proxy;
-    try {
-      proxy = proxylist.getProxy();
-    } catch {
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
-        logger?.log('No Proxy servers useable - Entering 50s Idel Time getAds');
-        await sleep(50000);
-        try {
-          proxy = proxylist.getProxy();
-          break;
-        } catch (e) {
-          logger?.error(`error while choose Proxy : ${e}`);
-        }
-      }
-    }
+    const proxy = await proxylist.getProxy();
     const a = await getAnunturis(
       filters.tranzactie,
       filters.proprietate,
       filters.localitate.id_localitate,
       loop,
       Thread,
+      proxy,
     );
     if (failedReq.length > 0) a.anunturi.concat(failedReq);
     failedReq = [];
@@ -190,8 +183,6 @@ async function startAll(
     if (failedReq.length > 0) {
       logger?.error(`${failedReq.length} Ad got Failed Retry Latter`);
       logger?.error('Proccess Failed');
-      onEvent('complete', 'Failed');
-      return;
     }
   }
   Writer.close();

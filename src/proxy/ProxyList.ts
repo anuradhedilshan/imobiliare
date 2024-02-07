@@ -1,6 +1,10 @@
+/* eslint-disable no-promise-executor-return */
 import Logger from '../engin/Logger';
 import Proxy from './Proxy';
 
+function sleep(ms: number): Promise<unknown> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 // Parse PRoxy
 interface ParsedProxy {
   protocol: string;
@@ -49,11 +53,20 @@ export default class ProxyList {
     return false;
   }
 
-  getProxy(): Proxy {
-    const can = this.PROXYLIST.filter((e) => e.canUse());
-    if (can.length <= 0) throw new Error('No Useble Proxy');
-    // console.log('get Proxy : ', can.length);
-    return can[Math.floor(Math.random() * can.length)];
+  async getProxy(): Promise<Proxy> {
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const can = this.PROXYLIST.filter((e) => e.canUse());
+      if (can.length <= 0) {
+        this.logger?.log(
+          'No Proxy servers useable - Entering 2-Minute Idel Time getAds',
+        );
+        // eslint-disable-next-line no-await-in-loop
+        await sleep(60 * 1000 * 5);
+      } else {
+        return can[Math.floor(Math.random() * can.length)];
+      }
+    }
   }
 
   getProxyCount(): number {

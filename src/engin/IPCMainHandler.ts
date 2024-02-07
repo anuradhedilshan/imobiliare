@@ -147,6 +147,7 @@ class IPCMainHandler {
         filter.localitate.id_localitate,
         0,
         0,
+        null,
       );
       if (!ads) {
         this.logger?.error('getAdsCount Failed In IpcMain HAndler.ts');
