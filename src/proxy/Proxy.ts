@@ -43,7 +43,7 @@ export default class Proxy {
     this.lastUsed = 0;
     this.requestsSent = 0;
     this.maxRequests = 10000;
-    this.cooldownTime = 60 * 15 * 1000; // 5 minutes in milliseconds
+    this.cooldownTime = 60 * 60 * 1000; // 5 minutes in milliseconds
     // eslint-disable-next-line no-sequences
     this.auth = auth;
     Proxy.TestURL = 'https://www.imobiliare.ro/robots.txt';
@@ -112,7 +112,7 @@ export default class Proxy {
   }
 
   setWait() {
-    this.requestsSent = 999;
+    this.requestsSent = 99999;
   }
 
   canUse() {

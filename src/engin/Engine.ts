@@ -179,6 +179,7 @@ async function startAll(
             if (e.response?.status !== 400) {
               failed += 1;
               failedReq.push(i);
+              proxy.setWait();
             }
           }),
       );
