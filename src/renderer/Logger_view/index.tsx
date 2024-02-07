@@ -1,3 +1,3 @@
-import Logger_View from "./Logger_view";
+import LoggerView from './LoggerView';
 
-export default Logger_View;
+export default LoggerView;

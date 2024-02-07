@@ -42,7 +42,7 @@ const intialStatus = {
   tranzactie: 'N/A',
 };
 export default function Dataview() {
-  console.log('dataview Resnderd');
+  // console.log('dataview Resnderd');
 
   const [logger, setLogger] = useState('');
   const [status, setStatus] = useState(intialStatus);
@@ -56,7 +56,7 @@ export default function Dataview() {
       case 'count':
         break;
       case 'progress':
-        console.log('Progress++++++++++++++++++++++++', message);
+        // console.log('Progress++++++++++++++++++++++++', message);
         setProgress(message as number);
         break;
       case 'complete':
@@ -75,13 +75,11 @@ export default function Dataview() {
     <Paper>
       <Card sx={{ maxWidth: '490px', minWidth: '460px', height: '96vh' }}>
         <CardHeader title="DataView" subheader="StatusView" />
-        <CardContent sx={{ position: 'relative' }}>
+        <CardContent>
           <div>
             <Typography gutterBottom variant="subtitle1" component="div">
               <b>Titlu</b> - {status.titlu}
-            </Typography>
-            <Typography gutterBottom variant="subtitle1" component="div">
-              <b>Total</b> - {status.total}
+              <b style={{ marginLeft: 10 }}>Total</b> - {status.total}
             </Typography>
             <Typography gutterBottom variant="subtitle1" component="div">
               <b>categorie</b> - {status.categorie}

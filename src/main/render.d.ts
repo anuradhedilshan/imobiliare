@@ -8,6 +8,12 @@ export interface IPCMainHandler {
   onStatus: ((arg: any) => void) | null;
   openPathDialog: () => Promise<any>;
   getDataStatus: (filter: filterDataType) => void;
+  addProxy: (e: string) => Promise<
+    {
+      less: string;
+      full: string;
+    }[]
+  >;
 }
 
 declare global {

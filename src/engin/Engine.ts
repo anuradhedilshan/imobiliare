@@ -17,6 +17,8 @@ import { CB, Proprietate, Tranzactie } from './types';
 import { filterDataType } from '../renderer/filter/types.d';
 import Logger from './Logger';
 import JSONWriter from './JSONWriter';
+import ProxyList from '../proxy';
+import Proxy from '../proxy/Proxy';
 
 let logger: Logger | null = null;
 function sleep(ms: number): Promise<unknown> {
@@ -63,6 +65,8 @@ export async function getAnunturis(
       throw new Error('request failed');
     return data.data;
   } catch (e) {
+    // console.log(e);
+
     logger?.error(`Reqest tried 3 times due to : <b>${e}</b> @getAnunturis`);
     return null;
   }
@@ -75,7 +79,12 @@ async function getAnunturi(id: string): Promise<AxiosResponse> {
   return axios.get(url, { headers });
 }
 
-const Thread = 4;
+function getAnunturiUrl(id: string): string {
+  const url = `https://apirm.imobiliare.ro/2.2/anunturi/${id}`;
+  return url;
+}
+
+const Thread = 100;
 
 function setLoggerCallback(cb: CB): Logger {
   logger = new Logger(cb);
@@ -93,6 +102,7 @@ async function startAll(
     filepath: string;
   },
   onEvent: CB,
+  proxylist: ProxyList,
 ) {
   logger?.warn(`Prosess Started...${JSON.stringify(filters)}`);
   let count = 0;
@@ -104,19 +114,43 @@ async function startAll(
     0,
     0,
   );
-  if (!ads) logger?.error('getAdsCount Failed In Engine.ts');
+  if (!ads) {
+    logger?.error('getAdsCount Failed In Engine.ts');
+    webcontent.reply('dataUpdate', {
+      total: 'n/A',
+      titlu: 'Data Not Available',
+      categorie: 'N/A',
+      tranzactie: 'N/A',
+    });
+  }
   const { total, titlu, categorie, tranzactie } = ads as any;
   const Writer = new JSONWriter(`${filepath}/${he.decode(titlu)}`);
   // send StatusUpdateEvent
   logger?.log(`Got ${total} Ads in ${titlu}`);
   webcontent.reply('dataUpdate', { total, titlu, categorie, tranzactie });
+  let failedReq: string[] = [];
   // Runner
-  for (let loop = 0; loop <= total; loop += Thread) {
+  for (let loop = 0; loop <= total + Thread; loop += Thread) {
     logger?.warn(`Total : ${total} -  loop :  ${loop}`);
     const promises = [];
     let failed = 0;
     const Data: any[] = [];
-    const failedReq: string[] = [];
+    let proxy: Proxy;
+    try {
+      proxy = proxylist.getProxy();
+    } catch {
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        logger?.log('No Proxy servers useable - Entering 50s Idel Time getAds');
+        await sleep(50000);
+        try {
+          proxy = proxylist.getProxy();
+          break;
+        } catch (e) {
+          logger?.error(`error while choose Proxy : ${e}`);
+        }
+      }
+    }
     const a = await getAnunturis(
       filters.tranzactie,
       filters.proprietate,
@@ -124,10 +158,13 @@ async function startAll(
       loop,
       Thread,
     );
+    if (failedReq.length > 0) a.anunturi.concat(failedReq);
+    failedReq = [];
     for (const i of a.anunturi) {
       await sleep(100);
       promises.push(
-        getAnunturi(i.id)
+        proxy
+          .fetch(getAnunturiUrl(i.id), headers)
           .then(({ data, status }: AxiosResponse) => {
             logger?.log(`${count} : got ${i.id} - ${status}`);
             if (status !== 200 || data.status !== 'success')
@@ -137,11 +174,12 @@ async function startAll(
             count += 1;
             return i.id;
           })
-          .catch((e: Error) => {
+          .catch((e: AxiosError) => {
             logger?.error(`Reqest Failed ${i.id} : ${e.message}`);
-            failed += 1;
-            failedReq.push(i.id);
-            return i.id;
+            if (e.response?.status !== 400) {
+              failed += 1;
+              failedReq.push(i);
+            }
           }),
       );
     }

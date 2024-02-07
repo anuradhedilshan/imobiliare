@@ -2,8 +2,11 @@ import fs from 'fs';
 
 class JSONWriter {
   private writeStream: fs.WriteStream;
+
   private isOpen = false;
+
   private prev = false;
+
   private FIlename: string;
 
   constructor(filePath: string) {
@@ -37,8 +40,8 @@ class JSONWriter {
         this.FIlename,
         `${this.FIlename.replace(/^\./, '').replace(/\./g, '_')}.json`,
         () => {
-          console.log(`${this.FIlename.replace(/^\./, '')}.json`);
-          console.log('\nFile Renamed!\n');
+          // console.log(`${this.FIlename.replace(/^\./, '')}.json`);
+          // console.log('\nFile Renamed!\n');
         },
       );
       this.isOpen = false;

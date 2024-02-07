@@ -7,7 +7,7 @@ import Dataview from './dataView';
 
 export default class App extends React.Component {
   render(): React.ReactNode {
-    console.log('Entirre APp renderd');
+    // console.log('Entirre APp renderd');
 
     return (
       <Grid

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* eslint-disable promise/catch-or-return */
 /* eslint-disable promise/always-return */
 /* eslint-disable react/jsx-props-no-spreading */
@@ -10,9 +11,7 @@ import {
   CardActions,
   CardContent,
   CardHeader,
-  Checkbox,
   FormControl,
-  FormControlLabel,
   InputAdornment,
   MenuItem,
   Paper,
@@ -20,15 +19,8 @@ import {
   SelectChangeEvent,
   TextField,
 } from '@mui/material';
-import {
-  ChangeEvent,
-  SyntheticEvent,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { ChangeEvent, SyntheticEvent, useRef, useState } from 'react';
 import FolderIcon from '@mui/icons-material/Folder';
-import { ipcRenderer } from 'electron';
 import Catagories from './Catagories';
 import {
   LocationType,
@@ -36,6 +28,7 @@ import {
   Tranzactie,
   filterDataType,
 } from './types.d';
+import ProxyDialog from '../proxyView';
 // sd
 
 const proprietate = [
@@ -50,7 +43,7 @@ const proprietate = [
     value: Proprietate.commercial,
   },
   {
-    name: 'house',
+    name: 'Case/Vile',
     icon: require('assets/icons/ic_filter_house_default.png'),
     value: Proprietate.house,
   },
@@ -105,22 +98,21 @@ export default function Filter() {
   const handler = (
     event: ChangeEvent<HTMLInputElement> | SelectChangeEvent<string | null>,
   ) => {
-    console.log(event.target.name);
+    // console.log(event.target.name);
     setFilter({ ...filter, [event.target.name]: event.target.value });
   };
   const handler1 = (value: LocationType) => {
     setFilter({ ...filter, localitate: value });
   };
   const [loading, setLoading] = useState(true);
-  const autoCompletehandler = (event: SyntheticEvent) => {
+  const autoCompletehandler = (
+    event: SyntheticEvent<Element, Event>,
+    value: string,
+    reason: any,
+  ) => {
     setLoading(true);
-    window.IPCMainHandler.getSuggestLocations(event.target.value as string)
+    window.IPCMainHandler.getSuggestLocations(value)
       .then((d: LocationType[]) => {
-        console.log(':After set', [
-          getAllOverCountryOption,
-          ...d.filter((e) => e.id_localitate),
-        ]);
-
         setSuggests([
           getAllOverCountryOption,
           ...d.filter((e) => e.id_localitate),
@@ -128,7 +120,7 @@ export default function Filter() {
         setLoading(false);
       })
       .catch((e: Error) => {
-        console.log(e);
+        console.error(e);
       });
   };
   const decodeHtmlEntities = (input: string) => {
@@ -147,8 +139,16 @@ export default function Filter() {
     getOptionKey: (option: LocationType) => option.id,
   };
 
+  const [openState, setOpen] = useState(false);
+
   return (
     <Paper>
+      <ProxyDialog
+        openState={openState}
+        handleClose={(e: any) => {
+          setOpen(false);
+        }}
+      />
       <Card sx={{ minWidth: '200px', height: '96vh' }}>
         <CardHeader title="Filter" subheader={new Date().toUTCString()} />
         <CardContent>
@@ -239,6 +239,14 @@ export default function Filter() {
         </CardContent>
         <CardActions>
           <Button
+            variant="contained"
+            onClick={() => {
+              setOpen(true);
+            }}
+          >
+            AddProxy
+          </Button>
+          <Button
             size="medium"
             onClick={() => {
               window.IPCMainHandler.getDataStatus(filter);
@@ -251,7 +259,7 @@ export default function Filter() {
             variant="contained"
             size="medium"
             onClick={async () => {
-              console.log('startwith', filter);
+              // console.log('startwith', filter);
               if (fpath !== '') {
                 window.IPCMainHandler.startAll(filter, fpath);
               } else {

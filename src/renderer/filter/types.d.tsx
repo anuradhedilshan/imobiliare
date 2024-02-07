@@ -5,9 +5,9 @@ export enum Tranzactie {
 
 export enum Proprietate {
   apartment = 1,
-  commercial = 2,
-  house = 3,
-  terrain = 4,
+  commercial = 4,
+  house = 2,
+  terrain = 3,
 }
 
 export type LocationType = {

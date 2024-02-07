@@ -5,7 +5,7 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import { Card, CardContent, IconButton } from '@mui/material';
 
-function Logger_View({ logger_Data }: { logger_Data: string }) {
+function LoggerView({ logger_Data }: { logger_Data: string }) {
   const [expand, setExpand] = useState(false);
   return (
     <div style={{ position: 'relative' }}>
@@ -55,4 +55,4 @@ function Logger_View({ logger_Data }: { logger_Data: string }) {
   );
 }
 
-export default Logger_View;
+export default LoggerView;

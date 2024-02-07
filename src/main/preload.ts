@@ -21,6 +21,12 @@ const IPCMainHandler: IPCMainHandlerType = {
   async getDataStatus(filter: filterDataType) {
     ipcRenderer.send('getDataStatus', filter);
   },
+  addProxy: async (e: string): Promise<{ less: string; full: string }[]> => {
+    // console.log('add Proxy');
+
+    const d = await ipcRenderer.invoke('addProxy', e);
+    return d;
+  },
 };
 
 window.IPCMainHandler = IPCMainHandler;
@@ -34,7 +40,7 @@ function sendEvent(
 }
 
 ipcRenderer.on('event', (_e, arg) => {
-  console.log('onEvent');
+  // console.log('onEvent');
 
   sendEvent(arg.Type, arg.p);
 });

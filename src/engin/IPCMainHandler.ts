@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-syntax */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable class-methods-use-this */
 import { ipcMain, BrowserWindow, IpcMainEvent, dialog } from 'electron';
@@ -6,6 +7,8 @@ import { LocationType, filterDataType } from '../renderer/filter/types.d';
 import { CB } from './types';
 import { getAnunturis, setLoggerCallback, startAll } from './Engine';
 import Logger from './Logger';
+import ProxyList from '../proxy';
+import Proxy from '../proxy/Proxy';
 
 const myHeaders = new Headers();
 myHeaders.append('uuid', '	efbc128b-0ad7-44b5-86fc-fe409aebffc7');
@@ -37,20 +40,23 @@ let data = [
 ];
 export async function loadSuggestlocalitate(
   text: string,
-): Promise<LocationType[]> {
+): Promise<LocationType[] | null> {
   if (pre === text) {
-    console.log('load from cahe');
     return data;
   }
-  const s = await (
-    await fetch(
-      `https://www.imobiliare.ro/sugestii-v2/tranzactie-2/${text}`,
-      requestOptions,
-    )
-  ).json();
-  pre = text;
-  data = s.sugestii;
-  return data;
+  try {
+    const s = await (
+      await fetch(
+        `https://www.imobiliare.ro/sugestii-v2/tranzactie-2/${text}`,
+        requestOptions,
+      )
+    ).json();
+    pre = text;
+    data = s.sugestii;
+    return data;
+  } catch (e) {
+    return null;
+  }
 }
 
 class IPCMainHandler {
@@ -61,6 +67,8 @@ class IPCMainHandler {
   running = false;
 
   logger: Logger;
+
+  Pl: ProxyList;
 
   constructor(mainWindow: BrowserWindow) {
     this.f = (Type, p) => {
@@ -73,6 +81,7 @@ class IPCMainHandler {
 
     this.logger = setLoggerCallback(this.f);
     this.mainWindow = mainWindow;
+    this.Pl = new ProxyList(this.logger);
     // Register IPC event handlers
     ipcMain.handle('getSuggestLocations', async (_e, arg) => {
       return loadSuggestlocalitate(arg);
@@ -86,6 +95,9 @@ class IPCMainHandler {
       });
       return result;
     });
+    ipcMain.handle('addProxy', async (_e, arg) => {
+      return this.setProxyasync(arg);
+    });
   }
 
   // Add more private methods for handling other IPC events
@@ -94,14 +106,37 @@ class IPCMainHandler {
     arg: { filters: filterDataType; filepath: string },
   ): void {
     this.logger.log(`startall : ${arg}`);
-    if (!this.running) startAll(_e, arg, this.f);
-    this.running = true;
+    if (this.Pl.getProxyCount() <= 0) {
+      this.logger.error('no any proxy');
+      return;
+    }
+    try {
+      if (!this.running) startAll(_e, arg, this.f, this.Pl);
+      this.running = true;
+    } catch (e) {
+      this.logger.error(`StartALl rejected due to ${e}`);
+    }
   }
 
   // Cleanup method to remove event listeners
   public destroy(): void {
     ipcMain.removeAllListeners('MainEvents');
     // Remove listeners for other events
+  }
+
+  private async setProxyasync(arg: string): Promise<
+    {
+      less: string;
+      full: string;
+    }[]
+  > {
+    const working = [];
+    for (const i of arg.trim().split('\n')) {
+      // eslint-disable-next-line no-await-in-loop
+      const out = await this.Pl.addProxy(i);
+      if (out) working.push((out as Proxy).getProxyString());
+    }
+    return working;
   }
 
   async getDataStatus(_e: IpcMainEvent, filter: filterDataType) {
@@ -113,7 +148,16 @@ class IPCMainHandler {
         0,
         0,
       );
-      if (!ads) this.logger?.error('getAdsCount Failed In IpcMain HAndler.ts');
+      if (!ads) {
+        this.logger?.error('getAdsCount Failed In IpcMain HAndler.ts');
+        _e.reply('dataUpdate', {
+          total: 'n/A',
+          titlu: 'Data Not Available',
+          categorie: 'N/A',
+          tranzactie: 'N/A',
+        });
+      }
+
       const { total, titlu, categorie, tranzactie } = ads as any;
       _e.reply('dataUpdate', {
         total,
