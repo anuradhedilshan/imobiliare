@@ -233,11 +233,6 @@ const proxy = [
   'http://bobsqalq:aheiwvfphsoz@45.155.68.129:8133',
   'http://bobsqalq:aheiwvfphsoz@154.95.36.199:6893',
 ];
-
-proxy.forEach(async (e) => {
-  const pp = await Pl.addProxy(e);
-  if (pp) console.log('proxy Parse', (pp as Proxy).getProxyString().full);
-});
 const filters: filterDataType = {
   localitate: {
     nume: '',
@@ -253,10 +248,19 @@ const filters: filterDataType = {
   proprietate: Proprietate.apartment,
   tranzactie: Tranzactie.Devânzare,
 };
-startAll(
-  { filters, filepath: './' },
-  (e, d) => {
-    console.log(e, ':', d);
-  },
-  Pl,
-);
+
+(async () => {
+  for (const e of proxy) {
+    const pp = await Pl.addProxy(e);
+    if (pp) console.log('proxy Parse', (pp as Proxy).getProxyString().full);
+  }
+  console.log('AFter proxy load');
+
+  startAll(
+    { filters, filepath: './' },
+    (e, d) => {
+      console.log(e, ':', d);
+    },
+    Pl,
+  );
+})();
