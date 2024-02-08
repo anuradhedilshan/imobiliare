@@ -159,7 +159,7 @@ async function startAll(
   }
 
   const { total, titlu, categorie, tranzactie, id_lista } = ads as any;
-  const Writer = new JSONWriter(`${filepath}/${id_lista}`);
+  // const Writer = new JSONWriter(`${filepath}/${id_lista}`);
   console.log(`${filepath}/${id_lista}.json`);
 
   // send StatusUpdateEvent
@@ -212,13 +212,13 @@ async function startAll(
     }
     await Promise.all(promises);
     onEvent('progress', Math.round((count / total) * 100));
-    Writer.appendData(Data);
+    // Writer.appendData(Data);
     if (failedReq.length > 0) {
       console.error(`${failedReq.length} Ad got Failed Retry Latter`);
       console.error('Proccess Failed');
     }
   }
-  Writer.close();
+  // Writer.close();
   onEvent('complete', 'done');
   console.log('DOne.......');
   console.log(`file Saved in ${filepath}`);
