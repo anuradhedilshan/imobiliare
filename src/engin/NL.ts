@@ -14,12 +14,45 @@ import axios, {
 import axiosRetry from 'axios-retry';
 import { IpcMainEvent } from 'electron';
 import he from 'he';
-import { CB, Proprietate, Tranzactie } from './types';
-import { filterDataType } from '../renderer/filter/types.d';
+
 import Logger from './Logger';
 import JSONWriter from './JSONWriter';
 import ProxyList from '../proxy';
 import Proxy from '../proxy/Proxy';
+
+enum Tranzactie {
+  Devânzare = 1,
+  Deînchiriat = 2,
+}
+
+enum Proprietate {
+  apartment = 1,
+  commercial = 2,
+  house = 3,
+  terrain = 4,
+}
+
+export type LocationType = {
+  nume: string;
+  id: string | number;
+  id_judet: number | string;
+  nume_judet: string;
+  id_localitate: number;
+  nume_localitate: string;
+  tip: number;
+  id_zona: string | number;
+};
+type filterDataType = {
+  localitate: LocationType;
+  zone: string | null;
+  proprietate: Proprietate;
+  tranzactie: Tranzactie;
+};
+
+type CB = (
+  Type: 'progress' | 'count' | 'complete' | 'error' | 'details' | 'warn',
+  message: number | boolean | string | null,
+) => void;
 
 let logger: Logger | null = null;
 function sleep(ms: number): Promise<unknown> {
