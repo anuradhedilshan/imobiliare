@@ -160,6 +160,8 @@ async function startAll(
 
   const { total, titlu, categorie, tranzactie, id_lista } = ads as any;
   const Writer = new JSONWriter(`${filepath}/${id_lista}`);
+  console.log(`${filepath}/${id_lista}.json`);
+
   // send StatusUpdateEvent
   console.log(`Got ${total} Ads in ${titlu}`);
   let failedReq: string[] = [];
