@@ -156,6 +156,7 @@ class IPCMainHandler {
           titlu: 'Data Not Available',
           categorie: 'N/A',
           tranzactie: 'N/A',
+          filename: 'N/A',
         });
       }
 
@@ -165,6 +166,7 @@ class IPCMainHandler {
         titlu: he.decode(titlu),
         categorie,
         tranzactie,
+        filename: 'N/A',
       });
     } catch (e) {
       this.logger.error(`${e}`);

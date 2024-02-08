@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-expressions */
 import axios, {
+  AxiosError,
   AxiosProxyConfig,
   AxiosRequestConfig,
   AxiosResponse,
@@ -75,6 +76,8 @@ export default class Proxy {
   }
 
   fetch(url: string, headersS: RawAxiosRequestHeaders): Promise<AxiosResponse> {
+    if (this.requestsSent >= this.maxRequests)
+      return Promise.reject(new AxiosError('proxyfailed,502'));
     this.markUsed();
 
     return axios.get(url, {

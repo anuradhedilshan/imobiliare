@@ -59,7 +59,7 @@ export default class ProxyList {
       const can = this.PROXYLIST.filter((e) => e.canUse());
       if (can.length <= 0) {
         this.logger?.log(
-          'No Proxy servers useable - Entering 2-Minute Idel Time getAds',
+          'No Proxy servers useable - Entering 5-Minute Idel Time getAds',
         );
         // eslint-disable-next-line no-await-in-loop
         await sleep(60 * 1000 * 5);

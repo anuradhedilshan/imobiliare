@@ -40,6 +40,7 @@ const intialStatus = {
   total: 'N/A',
   categorie: 'N/A',
   tranzactie: 'N/A',
+  filename: 'N/A',
 };
 export default function Dataview() {
   // console.log('dataview Resnderd');
@@ -84,6 +85,9 @@ export default function Dataview() {
             <Typography gutterBottom variant="subtitle1" component="div">
               <b>categorie</b> - {status.categorie}
               <b style={{ marginLeft: 10 }}>tranzactie</b> - {status.tranzactie}
+            </Typography>
+            <Typography gutterBottom variant="subtitle1" component="div">
+              <b>FileName</b> - {status.filename}
             </Typography>
           </div>
           <LinearProgress

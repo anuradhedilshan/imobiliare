@@ -39,7 +39,7 @@ axiosRetry(axios, {
   retries: 3,
   retryCondition(error: AxiosError): boolean {
     if (error.response?.status === 400) {
-      logger?.warn('Invalid Filter Options');
+      console.warn('Invalid Filter Options');
       return false;
     }
     return true;
@@ -50,7 +50,7 @@ axiosRetry(axios, {
 });
 
 // getAdList
-export async function getAnunturis(
+async function getAnunturis(
   t: Tranzactie,
   c: Proprietate,
   l: string | number,
@@ -71,7 +71,7 @@ export async function getAnunturis(
   } catch (e) {
     // console.log(e);
 
-    logger?.error(`Reqest tried 3 times due to : <b>${e}</b> @getAnunturis`);
+    console.error(`Reqest tried 3 times due to : <b>${e}</b> @getAnunturis`);
     return null;
   }
 }
@@ -97,7 +97,6 @@ function setLoggerCallback(cb: CB): Logger {
 // startAll
 
 async function startAll(
-  webcontent: IpcMainEvent,
   {
     filters,
     filepath,
@@ -108,7 +107,7 @@ async function startAll(
   onEvent: CB,
   proxylist: ProxyList,
 ) {
-  logger?.warn(`Prosess Started...${JSON.stringify(filters)}`);
+  console.warn(`Prosess Started...${JSON.stringify(filters)}`);
   let count = 0;
   // getAdsCount
   const p = await proxylist.getProxy();
@@ -121,14 +120,7 @@ async function startAll(
     p,
   );
   if (!ads) {
-    logger?.error('getAdsCount Failed In Engine.ts');
-    webcontent.reply('dataUpdate', {
-      total: 'n/A',
-      titlu: 'Data Not Available',
-      categorie: 'N/A',
-      tranzactie: 'N/A',
-      filename: 'N/A',
-    });
+    console.error('getAdsCount Failed In Engine.ts');
     onEvent('complete', 'Failed');
     return;
   }
@@ -136,18 +128,11 @@ async function startAll(
   const { total, titlu, categorie, tranzactie, id_lista } = ads as any;
   const Writer = new JSONWriter(`${filepath}/${id_lista}`);
   // send StatusUpdateEvent
-  logger?.log(`Got ${total} Ads in ${titlu}`);
-  webcontent.reply('dataUpdate', {
-    total,
-    titlu,
-    categorie,
-    tranzactie,
-    filename: `${filepath}/${id_lista}.json`,
-  });
+  console.log(`Got ${total} Ads in ${titlu}`);
   let failedReq: string[] = [];
   // Runner
   for (let loop = 0; loop <= total + Thread; loop += Thread) {
-    logger?.warn(`Total : ${total} -  loop :  ${loop}`);
+    console.warn(`Total : ${total} -  loop :  ${loop}`);
     const promises = [];
     let failed = 0;
     const Data: any[] = [];
@@ -160,11 +145,11 @@ async function startAll(
       Thread,
       proxy,
     );
-    logger?.warn(
+    console.warn(
       `${failedReq.length} Requests Failed : ${a.anunturi.length}  have to send`,
     );
     if (failedReq.length > 0) a.anunturi = a.anunturi.concat(failedReq);
-    logger?.warn(`After concat  : ${a.anunturi.length}  have to send`);
+    console.warn(`After concat  : ${a.anunturi.length}  have to send`);
     failedReq = [];
     for (const i of a.anunturi) {
       await sleep(100);
@@ -172,7 +157,7 @@ async function startAll(
         proxy
           .fetch(getAnunturiUrl(i.id), headers)
           .then(({ data, status }: AxiosResponse) => {
-            logger?.log(`${count} : got ${i.id} - ${status}`);
+            console.log(`${count} : got ${i.id} - ${status}`);
             if (status !== 200 || data.status !== 'success')
               throw new Error(`${i.id} requests failed`);
             delete data.data.poze;
@@ -181,7 +166,7 @@ async function startAll(
             return i.id;
           })
           .catch((e: AxiosError) => {
-            logger?.error(`Reqest Failed ${i.id} : ${e.message}`);
+            console.error(`Reqest Failed ${i.id} : ${e.message}`);
             if (e.response?.status !== 400) {
               failed += 1;
               failedReq.push(i);
@@ -194,14 +179,51 @@ async function startAll(
     onEvent('progress', Math.round((count / total) * 100));
     Writer.appendData(Data);
     if (failedReq.length > 0) {
-      logger?.error(`${failedReq.length} Ad got Failed Retry Latter`);
-      logger?.error('Proccess Failed');
+      console.error(`${failedReq.length} Ad got Failed Retry Latter`);
+      console.error('Proccess Failed');
     }
   }
   Writer.close();
   onEvent('complete', 'done');
-  logger?.log('DOne.......');
-  logger?.log(`file Saved in ${filepath}`);
+  console.log('DOne.......');
+  console.log(`file Saved in ${filepath}`);
 }
 
-export { startAll, setLoggerCallback };
+console.log('starting');
+
+// proxy
+const L = setLoggerCallback(() => {});
+const Pl = new ProxyList(L);
+const proxy = [
+  'http://bobsqalq:aheiwvfphsoz@188.74.183.10:8279',
+  'http://bobsqalq:aheiwvfphsoz@188.74.210.21:6100',
+  'http://bobsqalq:aheiwvfphsoz@45.155.68.129:8133',
+  'http://bobsqalq:aheiwvfphsoz@154.95.36.199:6893',
+];
+
+proxy.forEach(async (e) => {
+  const pp = await Pl.addProxy(e);
+  if (pp) console.log('proxy Parse', (pp as Proxy).getProxyString().full);
+});
+const filters: filterDataType = {
+  localitate: {
+    nume: '',
+    id: '',
+    id_judet: '',
+    nume_judet: '',
+    id_localitate: 13822,
+    nume_localitate: '',
+    tip: 0,
+    id_zona: '',
+  },
+  zone: null,
+  proprietate: Proprietate.apartment,
+  tranzactie: Tranzactie.Devânzare,
+};
+startAll(
+  { filters, filepath: './' },
+  (e, d) => {
+    console.log(e, ':', d);
+  },
+  Pl,
+);
