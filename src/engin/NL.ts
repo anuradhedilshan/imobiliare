@@ -124,7 +124,7 @@ function getAnunturiUrl(id: string): string {
   return url;
 }
 
-const Thread = 20;
+const Thread = 200;
 
 function setLoggerCallback(cb: CB): Logger {
   logger = new Logger(cb);
@@ -169,7 +169,7 @@ async function startAll(
   console.log(`Got ${total} Ads in ${titlu}`);
   let failedReq: string[] = [];
   // Runner
-  for (let loop = 5000; loop <= total + Thread; loop += Thread) {
+  for (let loop = 0; loop <= total + Thread; loop += Thread) {
     console.warn(`Total : ${total} -  loop :  ${loop}`);
     const promises: Promise<AxiosResponse>[] = [];
     let failed = 0;
