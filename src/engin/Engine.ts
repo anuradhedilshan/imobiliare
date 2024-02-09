@@ -151,13 +151,14 @@ async function startAll(
     const promises = [];
     let failed = 0;
     const Data: any[] = [];
+    const proxy = await proxylist.getProxy();
     const a = await getAnunturis(
       filters.tranzactie,
       filters.proprietate,
       filters.localitate.id_localitate,
       loop,
       Thread,
-      null,
+      proxy,
     );
     logger?.warn(
       `${failedReq.length} Requests Failed : ${a.anunturi.length}  have to send`,
@@ -166,7 +167,6 @@ async function startAll(
     logger?.warn(`After concat  : ${a.anunturi.length}  have to send`);
     failedReq = [];
     if (a.anunturi.length === 0) break;
-    const proxy = await proxylist.getProxy();
     for (const i of a.anunturi) {
       await sleep(100);
       promises.push(

@@ -123,7 +123,7 @@ function getAnunturiUrl(id: string): string {
   return url;
 }
 
-const Thread = 100;
+const Thread = 20;
 
 function setLoggerCallback(cb: CB): Logger {
   logger = new Logger(cb);
@@ -168,9 +168,9 @@ async function startAll(
   console.log(`Got ${total} Ads in ${titlu}`);
   let failedReq: string[] = [];
   // Runner
-  for (let loop = 0; loop <= total + Thread; loop += Thread) {
+  for (let loop = 5000; loop <= total + Thread; loop += Thread) {
     console.warn(`Total : ${total} -  loop :  ${loop}`);
-    const promises = [];
+    const promises: Promise<AxiosResponse>[] = [];
     let failed = 0;
     const Data: any[] = [];
     const proxy = await proxylist.getProxy();
@@ -180,7 +180,10 @@ async function startAll(
       filters.localitate.id_localitate,
       loop,
       Thread,
-      null,
+      proxy,
+    );
+    console.info(
+      `getAnunturis for - offset : ${total} got : ${a.anunturi.length} `,
     );
     console.warn(
       `${failedReq.length} Requests Failed : ${a.anunturi.length}  have to send`,
@@ -194,7 +197,7 @@ async function startAll(
         proxy
           .fetch(getAnunturiUrl(i.id), headers)
           .then(({ data, status }: AxiosResponse) => {
-            console.log(`${count} : got ${i.id} - ${status}`);
+            // console.log(`${count} : got ${i.id} - ${status}`);
             if (status !== 200 || data.status !== 'success')
               throw new Error(`${i.id} requests failed`);
             delete data.data.poze;
@@ -203,7 +206,7 @@ async function startAll(
             return i.id;
           })
           .catch((e: AxiosError) => {
-            console.error(`Reqest Failed ${i.id} : ${e.message}`);
+            // console.error(`Reqest Failed ${i.id} : ${e.message}`);
             if (e.response?.status !== 400) {
               failed += 1;
               failedReq.push(i);
