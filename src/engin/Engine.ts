@@ -88,7 +88,7 @@ function getAnunturiUrl(id: string): string {
   return url;
 }
 
-const Thread = 20;
+const Thread = 100;
 
 function setLoggerCallback(cb: CB): Logger {
   logger = new Logger(cb);
@@ -134,7 +134,7 @@ async function startAll(
   }
 
   const { total, titlu, categorie, tranzactie, id_lista } = ads as any;
-  const Writer = new JSONWriter(`${filepath}/${id_lista}`);
+  const Writer = new JSONWriter(`${filepath}/${he.decode(titlu)}.`);
   // send StatusUpdateEvent
   logger?.log(`Got ${total} Ads in ${titlu}`);
   webcontent.reply('dataUpdate', {
@@ -151,14 +151,13 @@ async function startAll(
     const promises = [];
     let failed = 0;
     const Data: any[] = [];
-    const proxy = await proxylist.getProxy();
     const a = await getAnunturis(
       filters.tranzactie,
       filters.proprietate,
       filters.localitate.id_localitate,
       loop,
       Thread,
-      proxy,
+      null,
     );
     logger?.warn(
       `${failedReq.length} Requests Failed : ${a.anunturi.length}  have to send`,
@@ -166,6 +165,8 @@ async function startAll(
     if (failedReq.length > 0) a.anunturi = a.anunturi.concat(failedReq);
     logger?.warn(`After concat  : ${a.anunturi.length}  have to send`);
     failedReq = [];
+    if (a.anunturi.length === 0) break;
+    const proxy = await proxylist.getProxy();
     for (const i of a.anunturi) {
       await sleep(100);
       promises.push(

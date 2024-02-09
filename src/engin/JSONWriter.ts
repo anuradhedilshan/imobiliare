@@ -10,7 +10,7 @@ class JSONWriter {
   private FIlename: string;
 
   constructor(filePath: string) {
-    this.FIlename = filePath;
+    this.FIlename = filePath.replace(/[ .]/g, '_');
     this.writeStream = fs.createWriteStream(filePath, { flags: 'w' });
     this.writeStream.write('[\n');
     this.isOpen = true;

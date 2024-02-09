@@ -78,6 +78,8 @@ axiosRetry(axios, {
     return true;
   },
   retryDelay(retryCount, error) {
+    console.log('retrry - process', retryCount);
+
     return retryCount * 5000;
   },
 });
@@ -121,7 +123,7 @@ function getAnunturiUrl(id: string): string {
   return url;
 }
 
-const Thread = 20;
+const Thread = 100;
 
 function setLoggerCallback(cb: CB): Logger {
   logger = new Logger(cb);
@@ -178,7 +180,7 @@ async function startAll(
       filters.localitate.id_localitate,
       loop,
       Thread,
-      proxy,
+      null,
     );
     console.warn(
       `${failedReq.length} Requests Failed : ${a.anunturi.length}  have to send`,
