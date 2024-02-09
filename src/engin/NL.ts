@@ -197,7 +197,7 @@ async function startAll(
         proxy
           .fetch(getAnunturiUrl(i.id), headers)
           .then(({ data, status }: AxiosResponse) => {
-            // console.log(`${count} : got ${i.id} - ${status}`);
+            console.log(`${count} : got ${i.id} - ${status}`);
             if (status !== 200 || data.status !== 'success')
               throw new Error(`${i.id} requests failed`);
             delete data.data.poze;
@@ -206,12 +206,13 @@ async function startAll(
             return i.id;
           })
           .catch((e: AxiosError) => {
-            // console.error(`Reqest Failed ${i.id} : ${e.message}`);
+            console.error(`Reqest Failed ${i.id} : ${e.message}`);
             if (e.response?.status !== 400) {
               failed += 1;
               failedReq.push(i);
               proxy.setWait();
             }
+            return i.id;
           }),
       );
     }
