@@ -67,6 +67,7 @@ export async function getAnunturis(
       : axios.get(url, { headers }));
     if (status !== 200 || data.status !== 'success')
       throw new Error('request failed');
+    logger?.warn(`getAnunturis hit url : ${url}`);
     return data.data;
   } catch (e) {
     // console.log(e);
