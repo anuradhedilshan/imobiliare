@@ -169,13 +169,13 @@ async function startAll(
   console.log(`Got ${total} Ads in ${titlu}`);
   let failedReq: string[] = [];
   // Runner
-  for (let loop = 0; loop <= total + Thread; loop += Thread) {
+  for (let loop = 4000; loop <= total + Thread; loop += Thread) {
     console.warn(`Total : ${total} -  loop :  ${loop}`);
     const promises: Promise<AxiosResponse>[] = [];
     let failed = 0;
     const Data: any[] = [];
-    const proxy = await proxylist.getProxy();
-    const a = await getAnunturis(
+    let proxy = await proxylist.getProxy();
+    let a = await getAnunturis(
       filters.tranzactie,
       filters.proprietate,
       filters.localitate.id_localitate,
@@ -192,6 +192,18 @@ async function startAll(
     if (failedReq.length > 0) a.anunturi = a.anunturi.concat(failedReq);
     console.warn(`After concat  : ${a.anunturi.length}  have to send`);
     failedReq = [];
+    if (!a.anunturi.length || a.anunturi.length === 0) {
+      logger?.log(`anunturi got failed${a.anunturi}`);
+      proxy = await proxylist.getProxy();
+      a = await getAnunturis(
+        filters.tranzactie,
+        filters.proprietate,
+        filters.localitate.id_localitate,
+        loop,
+        Thread,
+        proxy,
+      );
+    }
     for (const i of a.anunturi) {
       await sleep(100);
       promises.push(
@@ -236,12 +248,7 @@ console.log('starting');
 // proxy
 const L = setLoggerCallback(() => {});
 const Pl = new ProxyList(L);
-const proxy = [
-  'http://bobsqalq:aheiwvfphsoz@188.74.183.10:8279',
-  'http://bobsqalq:aheiwvfphsoz@188.74.210.21:6100',
-  'http://bobsqalq:aheiwvfphsoz@45.155.68.129:8133',
-  'http://bobsqalq:aheiwvfphsoz@154.95.36.199:6893',
-];
+const proxy = ['http://bobsqalq:aheiwvfphsoz@188.74.183.10:8279'];
 const filters: filterDataType = {
   localitate: {
     nume: '',

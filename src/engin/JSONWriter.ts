@@ -9,9 +9,9 @@ class JSONWriter {
 
   private FIlename: string;
 
-  constructor(filePath: string) {
-    this.FIlename = filePath.replace(/[ .]/g, '_');
-    this.writeStream = fs.createWriteStream(filePath, { flags: 'w' });
+  constructor(filePath: string, filename: string) {
+    this.FIlename = `${filePath}/.${filename.replace(/[ .]/g, '_')}`;
+    this.writeStream = fs.createWriteStream(this.FIlename, { flags: 'w' });
     this.writeStream.write('[\n');
     this.isOpen = true;
   }

@@ -45,6 +45,7 @@ axiosRetry(axios, {
     return true;
   },
   retryDelay(retryCount, error) {
+    logger?.warn(`Requets Retry : ${retryCount} Times `);
     return retryCount * 5000;
   },
 });
@@ -67,7 +68,7 @@ export async function getAnunturis(
       : axios.get(url, { headers }));
     if (status !== 200 || data.status !== 'success')
       throw new Error('request failed');
-    logger?.warn(`getAnunturis hit url : ${url}`);
+    logger?.warn(`getAnunturis hit url : <br/> ${url}`);
     return data.data;
   } catch (e) {
     // console.log(e);
@@ -89,12 +90,13 @@ function getAnunturiUrl(id: string): string {
   return url;
 }
 
-const Thread = 100;
+const Thread = 10;
 
 function setLoggerCallback(cb: CB): Logger {
   logger = new Logger(cb);
   return logger;
 }
+
 // startAll
 
 async function startAll(
@@ -135,7 +137,7 @@ async function startAll(
   }
 
   const { total, titlu, categorie, tranzactie, id_lista } = ads as any;
-  const Writer = new JSONWriter(`${filepath}/${he.decode(titlu)}.`);
+  const Writer = new JSONWriter(filepath, he.decode(titlu));
   // send StatusUpdateEvent
   logger?.log(`Got ${total} Ads in ${titlu}`);
   webcontent.reply('dataUpdate', {
@@ -143,38 +145,53 @@ async function startAll(
     titlu,
     categorie,
     tranzactie,
-    filename: `${filepath}/${id_lista}.json`,
+    filename: `${filepath}/${he.decode(titlu)}.json`,
   });
   let failedReq: string[] = [];
   // Runner
   for (let loop = 0; loop <= total + Thread; loop += Thread) {
-    logger?.warn(`Total : ${total} -  loop :  ${loop}`);
+    logger?.log(`Total : ${total} -  loop :  ${loop}`);
     const promises = [];
     let failed = 0;
     const Data: any[] = [];
-    const proxy = await proxylist.getProxy();
-    const a = await getAnunturis(
-      filters.tranzactie,
-      filters.proprietate,
-      filters.localitate.id_localitate,
-      loop,
-      Thread,
-      proxy,
-    );
+    let retryCount = 3;
+    let a: any = null;
+    while (retryCount > 0) {
+      const proxy = retryCount === 1 ? null : await proxylist.getProxy();
+      logger?.warn(
+        `getAnunturis time : ${retryCount} with : ${proxy?.getProxyString()
+          .full}`,
+      );
+      a = await getAnunturis(
+        filters.tranzactie,
+        filters.proprietate,
+        filters.localitate.id_localitate,
+        loop,
+        Thread,
+        proxy,
+      );
+      if (a.anunturi.length > 0) break;
+      retryCount -= 1;
+    }
+
     logger?.warn(
       `${failedReq.length} Requests Failed : ${a.anunturi.length}  have to send`,
     );
+
     if (failedReq.length > 0) a.anunturi = a.anunturi.concat(failedReq);
-    logger?.warn(`After concat  : ${a.anunturi.length}  have to send`);
+    logger?.log(`After concat  : ${a.anunturi.length}  have to send`);
     failedReq = [];
     if (a.anunturi.length === 0) break;
+
+    // get Random proxy
+    const proxy = await proxylist.getProxy();
     for (const i of a.anunturi) {
       await sleep(100);
       promises.push(
         proxy
           .fetch(getAnunturiUrl(i.id), headers)
           .then(({ data, status }: AxiosResponse) => {
-            logger?.log(`${count} : got ${i.id} - ${status}`);
+            // logger?.log(`${count} : got ${i.id} - ${status}`);
             if (status !== 200 || data.status !== 'success')
               throw new Error(`${i.id} requests failed`);
             delete data.data.poze;
@@ -193,6 +210,7 @@ async function startAll(
       );
     }
     await Promise.all(promises);
+    logger?.log(`Got ${count} ads`);
     onEvent('progress', Math.round((count / total) * 100));
     Writer.appendData(Data);
     if (failedReq.length > 0) {
@@ -201,9 +219,12 @@ async function startAll(
     }
   }
   Writer.close();
-  onEvent('complete', 'done');
-  logger?.log('DOne.......');
-  logger?.log(`file Saved in ${filepath}`);
+  logger?.log('Wait...........');
+  setTimeout(() => {
+    onEvent('complete', 'done');
+    logger?.log('DOne.......');
+    logger?.log(`file Saved in ${filepath}`);
+  }, 10000);
 }
 
 export { startAll, setLoggerCallback };
