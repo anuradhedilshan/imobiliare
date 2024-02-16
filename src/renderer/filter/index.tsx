@@ -45,7 +45,7 @@ const proprietate = [
   {
     name: 'Case/Vile',
     icon: require('assets/icons/ic_filter_house_default.png'),
-    value: Proprietate.house,
+    value: Proprietate.house_vile,
   },
   {
     name: 'terrain',
@@ -75,10 +75,10 @@ const intial: filterDataType = {
   tranzactie: Tranzactie.Devânzare,
 };
 const getAllOverCountryOption: LocationType = {
-  id: 9999999,
+  id: '',
   nume: 'Get All Over Country',
   nume_localitate: 'Get All Over Country',
-  id_localitate: 9999999,
+  id_localitate: '',
   id_judet: '',
   nume_judet: '',
   tip: 0,
@@ -98,7 +98,7 @@ export default function Filter() {
   const handler = (
     event: ChangeEvent<HTMLInputElement> | SelectChangeEvent<string | null>,
   ) => {
-    // console.log(event.target.name);
+    console.log(event.target.name);
     setFilter({ ...filter, [event.target.name]: event.target.value });
   };
   const handler1 = (value: LocationType) => {

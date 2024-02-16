@@ -48,6 +48,7 @@ export default function Dataview() {
   const [logger, setLogger] = useState('');
   const [status, setStatus] = useState(intialStatus);
   const [progress, setProgress] = useState(0);
+  const [done, setDone] = useState(false);
 
   window.IPCMainHandler.onEvent = (
     Type: 'progress' | 'count' | 'complete' | 'error' | 'details' | 'warn',
@@ -58,7 +59,15 @@ export default function Dataview() {
         break;
       case 'progress':
         // console.log('Progress++++++++++++++++++++++++', message);
-        setProgress(message as number);
+        if ((message as number) === 200) {
+          setProgress(100);
+          setDone(true);
+        } else {
+          if (done) {
+            setDone(false);
+          }
+          setProgress(message as number);
+        }
         break;
       case 'complete':
         break;
@@ -91,7 +100,8 @@ export default function Dataview() {
             </Typography>
           </div>
           <LinearProgress
-            variant="determinate"
+            color={done ? 'success' : 'primary'}
+            variant={!done ? 'determinate' : 'indeterminate'}
             sx={{ height: 20 }}
             value={progress}
           />

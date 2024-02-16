@@ -41,6 +41,8 @@ function LoggerView({ logger_Data }: { logger_Data: string }) {
               lineHeight: 1.5,
               fontSize: 12,
               fontFamily: 'Courier New, monospace',
+              textWrap: 'balance',
+              lineBreak: 'anywhere',
             }}
           >
             <div

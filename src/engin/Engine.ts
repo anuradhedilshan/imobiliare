@@ -1,3 +1,4 @@
+/* eslint-disable no-dupe-keys */
 /* eslint-disable camelcase */
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable no-await-in-loop */
@@ -15,7 +16,7 @@ import axiosRetry from 'axios-retry';
 import { IpcMainEvent } from 'electron';
 import he from 'he';
 import { CB, Proprietate, Tranzactie } from './types';
-import { filterDataType } from '../renderer/filter/types.d';
+import { LocationType, filterDataType } from '../renderer/filter/types.d';
 import Logger from './Logger';
 import JSONWriter from './JSONWriter';
 import ProxyList from '../proxy';
@@ -51,17 +52,11 @@ axiosRetry(axios, {
 });
 
 // getAdList
-export async function getAnunturis(
-  t: Tranzactie,
-  c: Proprietate,
-  l: string | number,
-  offset: number,
-  limit: number,
+export async function getAnunturisHarta(
+  lista: string,
   proxy: Proxy | null,
 ): Promise<any> {
-  const url = `https://apirm.imobiliare.ro/2.2/anunturi?tranzactie=${t}&categorie=${c}${
-    /* &tip_proprietate=2,3,1,4 */ ''
-  }&localitati=${l}&sortare=sctl&offset=${offset}&limit=${limit}`;
+  const url = `https://apirm.imobiliare.ro/2.2/lista_harta_anunturi?lista=${lista}`;
   try {
     const { status, data } = await (proxy
       ? proxy.fetch(url, headers)
@@ -77,7 +72,48 @@ export async function getAnunturis(
     return null;
   }
 }
+// raf-multiplu
+export async function rafMultiplu(
+  t: Tranzactie,
+  c: Proprietate,
+  l: LocationType,
+) {
+  const url = 'https://www.imobiliare.ro/lista/raf-multiplu';
+  const formData = new FormData();
+  formData.append('iSubcategorie', c.toString());
+  formData.append('sSortare', 'tl-none');
+  formData.append('aLocalizare[]', 'judet');
+  formData.append('aLocalizare[]', `l${l.id_localitate}`);
+  formData.append('aLocalizare[]', `z${l.id_zona ? l.id_zona : ''}`);
+  formData.append('date_cautator[tDataLimitaInregistrareLicitatie]', '2162');
+  formData.append('date_cautator[b_cautare_tranzactie_val]', t.toString());
+  formData.append('date_cautator[b_cautare_id_hidden]', '136058704');
+  formData.append('tDataLimitaInregistrareLicitatie', '2162');
+  formData.append('date_cautator[b_cautator_categorie_radio]', c.toString());
 
+  logger?.log(new URLSearchParams(formData as any).toString());
+  try {
+    const { status, data } = await axios.post(url, formData, {
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'user-agent':
+          'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+      },
+    });
+    if (status !== 200) throw new Error('request failed');
+    logger?.warn(`getAnunturis hit url : <br/> ${url}`);
+    return {
+      iIdCautare: data.iIdCautare,
+      aDetaliiTitlu: data.aDetaliiTitlu,
+      total: data.total,
+    };
+  } catch (e) {
+    // console.error(e);
+
+    logger?.error(`Reqest tried 3 times due to : <b>${e}</b> @getAnunturis`);
+    return null;
+  }
+}
 // getAd
 async function getAnunturi(id: string): Promise<AxiosResponse> {
   const url = `https://apirm.imobiliare.ro/2.2/anunturi/${id}`;
@@ -90,7 +126,7 @@ function getAnunturiUrl(id: string): string {
   return url;
 }
 
-const Thread = 10;
+const Thread = 100;
 
 function setLoggerCallback(cb: CB): Logger {
   logger = new Logger(cb);
@@ -114,15 +150,19 @@ async function startAll(
   logger?.warn(`Prosess Started...${JSON.stringify(filters)}`);
   let count = 0;
   // getAdsCount
-  const p = await proxylist.getProxy();
-  const ads = await getAnunturis(
+  const multiplu = await rafMultiplu(
     filters.tranzactie,
     filters.proprietate,
-    filters.localitate.id_localitate,
-    0,
-    0,
-    p,
+    filters.localitate,
   );
+  if (!multiplu) {
+    logger?.error('rafMultifu Failed');
+    return;
+  }
+  const { iIdCautare, aDetaliiTitlu, total } = multiplu;
+  const p = await proxylist.getProxy();
+
+  let ads: any[] = await getAnunturisHarta(iIdCautare, p);
   if (!ads) {
     logger?.error('getAdsCount Failed In Engine.ts');
     webcontent.reply('dataUpdate', {
@@ -135,61 +175,42 @@ async function startAll(
     onEvent('complete', 'Failed');
     return;
   }
-
-  const { total, titlu, categorie, tranzactie, id_lista } = ads as any;
-  const Writer = new JSONWriter(filepath, he.decode(titlu));
+  ads = Object.entries(ads);
+  const titlu = he.decode(aDetaliiTitlu.titlu);
+  const Writer = new JSONWriter(filepath, titlu);
   // send StatusUpdateEvent
   logger?.log(`Got ${total} Ads in ${titlu}`);
   webcontent.reply('dataUpdate', {
     total,
     titlu,
-    categorie,
-    tranzactie,
-    filename: `${filepath}/${he.decode(titlu)}.json`,
+    categorie: filters.proprietate,
+    tranzactie: filters.tranzactie,
+    filename: `${titlu}.json`,
   });
   let failedReq: string[] = [];
   // Runner
-  for (let loop = 0; loop <= total + Thread; loop += Thread) {
-    logger?.log(`Total : ${total} -  loop :  ${loop}`);
+  for (let loop = 0; loop <= ads.length + Thread; loop += Thread) {
+    logger?.warn(`Total : ${ads.length} -  loop :  ${loop}`);
+    await sleep(10);
     const promises = [];
     let failed = 0;
     const Data: any[] = [];
-    let retryCount = 3;
     let a: any = null;
-    while (retryCount > 0) {
-      const proxy = retryCount === 1 ? null : await proxylist.getProxy();
-      logger?.warn(
-        `getAnunturis time : ${retryCount} with : ${proxy?.getProxyString()
-          .full}`,
-      );
-      a = await getAnunturis(
-        filters.tranzactie,
-        filters.proprietate,
-        filters.localitate.id_localitate,
-        loop,
-        Thread,
-        proxy,
-      );
-      if (a.anunturi.length > 0) break;
-      retryCount -= 1;
-    }
 
-    logger?.warn(
-      `${failedReq.length} Requests Failed : ${a.anunturi.length}  have to send`,
-    );
-
-    if (failedReq.length > 0) a.anunturi = a.anunturi.concat(failedReq);
-    logger?.log(`After concat  : ${a.anunturi.length}  have to send`);
+    a = ads.slice(loop, loop + Thread);
+    logger?.log(`${failedReq.length} : requets failed *retring* `);
+    if (failedReq.length > 0) a = a.concat(failedReq);
+    logger?.log(`After concat  : ${a.length}  have to send`);
     failedReq = [];
-    if (a.anunturi.length === 0) break;
+    if (a.length === 0) break;
 
     // get Random proxy
     const proxy = await proxylist.getProxy();
-    for (const i of a.anunturi) {
+    for (const i of a) {
       await sleep(100);
       promises.push(
         proxy
-          .fetch(getAnunturiUrl(i.id), headers)
+          .fetch(getAnunturiUrl(i[1].a), headers)
           .then(({ data, status }: AxiosResponse) => {
             // logger?.log(`${count} : got ${i.id} - ${status}`);
             if (status !== 200 || data.status !== 'success')
@@ -209,6 +230,7 @@ async function startAll(
           }),
       );
     }
+
     await Promise.all(promises);
     logger?.log(`Got ${count} ads`);
     onEvent('progress', Math.round((count / total) * 100));
@@ -220,7 +242,9 @@ async function startAll(
   }
   Writer.close();
   logger?.log('Wait...........');
+  onEvent('progress', 100);
   setTimeout(() => {
+    onEvent('progress', 200);
     onEvent('complete', 'done');
     logger?.log('DOne.......');
     logger?.log(`file Saved in ${filepath}`);

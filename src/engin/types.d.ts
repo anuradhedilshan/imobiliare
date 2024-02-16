@@ -4,10 +4,10 @@ export enum Tranzactie {
 }
 
 export enum Proprietate {
-  apartment = 1,
-  commercial = 2,
-  house = 3,
-  terrain = 4,
+  apartment = 101,
+  commercial = 202,
+  house_vile = 102,
+  terrain = 108,
 }
 
 export type CB = (

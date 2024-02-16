@@ -20,18 +20,19 @@ import JSONWriter from './JSONWriter';
 import ProxyList from '../proxy';
 import Proxy from '../proxy/Proxy';
 
+import { rafMultiplu } from './Engine';
+
 enum Tranzactie {
   Devânzare = 1,
   Deînchiriat = 2,
 }
 
-enum Proprietate {
-  apartment = 1,
-  commercial = 2,
-  house = 3,
-  terrain = 4,
+export enum Proprietate {
+  apartment = 101,
+  commercial = 202,
+  house_vile = 102,
+  terrain = 108,
 }
-
 export type LocationType = {
   nume: string;
   id: string | number;
@@ -130,6 +131,7 @@ function setLoggerCallback(cb: CB): Logger {
   logger = new Logger(cb);
   return logger;
 }
+
 // startAll
 
 async function startAll(
@@ -251,14 +253,14 @@ const Pl = new ProxyList(L);
 const proxy = ['http://bobsqalq:aheiwvfphsoz@188.74.183.10:8279'];
 const filters: filterDataType = {
   localitate: {
-    nume: '',
-    id: '',
-    id_judet: '',
-    nume_judet: '',
+    nume: 'Vacaresti (zon&#259; &icirc;n Bucuresti)',
+    id: 1004152,
+    tip: 4,
+    id_zona: 859,
     id_localitate: 13822,
-    nume_localitate: '',
-    tip: 0,
-    id_zona: '',
+    nume_judet: 'Bucuresti Ilfov',
+    id_judet: 10,
+    nume_localitate: 'Bucuresti',
   },
   zone: null,
   proprietate: Proprietate.apartment,
@@ -266,17 +268,24 @@ const filters: filterDataType = {
 };
 
 (async () => {
-  for (const e of proxy) {
-    const pp = await Pl.addProxy(e);
-    if (pp) console.log('proxy Parse', (pp as Proxy).getProxyString().full);
-  }
-  console.log('AFter proxy load');
-
-  startAll(
-    { filters, filepath: './' },
-    (e, d) => {
-      console.log(e, ':', d);
-    },
-    Pl,
+  const data = await rafMultiplu(
+    filters.tranzactie,
+    filters.proprietate,
+    filters.localitate,
   );
+  console.log(data);
+
+  // for (const e of proxy) {
+  //   const pp = await Pl.addProxy(e);
+  //   if (pp) console.log('proxy Parse', (pp as Proxy).getProxyString().full);
+  // }
+  // console.log('AFter proxy load');
+
+  // startAll(
+  //   { filters, filepath: './' },
+  //   (e, d) => {
+  //     console.log(e, ':', d);
+  //   },
+  //   Pl,
+  // );
 })();

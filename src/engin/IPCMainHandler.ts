@@ -5,7 +5,7 @@ import { ipcMain, BrowserWindow, IpcMainEvent, dialog } from 'electron';
 import he from 'he';
 import { LocationType, filterDataType } from '../renderer/filter/types.d';
 import { CB } from './types';
-import { getAnunturis, setLoggerCallback, startAll } from './Engine';
+import { rafMultiplu, setLoggerCallback, startAll } from './Engine';
 import Logger from './Logger';
 import ProxyList from '../proxy';
 import Proxy from '../proxy/Proxy';
@@ -141,15 +141,22 @@ class IPCMainHandler {
 
   async getDataStatus(_e: IpcMainEvent, filter: filterDataType) {
     try {
-      const ads = await getAnunturis(
+      const multiplu = await rafMultiplu(
         filter.tranzactie,
         filter.proprietate,
-        filter.localitate.id_localitate,
-        0,
-        0,
-        null,
+        filter.localitate,
       );
-      if (!ads) {
+      if (multiplu) {
+        const { iIdCautare, aDetaliiTitlu, total } = multiplu;
+        const titlu = he.decode(aDetaliiTitlu.titlu);
+        _e.reply('dataUpdate', {
+          total,
+          titlu,
+          categorie: filter.proprietate,
+          tranzactie: filter.tranzactie,
+          filename: `iIdCautare : ${iIdCautare}`,
+        });
+      } else {
         this.logger?.error('getAdsCount Failed In IpcMain HAndler.ts');
         _e.reply('dataUpdate', {
           total: 'n/A',
@@ -159,15 +166,6 @@ class IPCMainHandler {
           filename: 'N/A',
         });
       }
-
-      const { total, titlu, categorie, tranzactie } = ads as any;
-      _e.reply('dataUpdate', {
-        total,
-        titlu: he.decode(titlu),
-        categorie,
-        tranzactie,
-        filename: 'N/A',
-      });
     } catch (e) {
       this.logger.error(`${e}`);
     }

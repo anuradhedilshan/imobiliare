@@ -4,10 +4,10 @@ export enum Tranzactie {
 }
 
 export enum Proprietate {
-  apartment = 1,
-  commercial = 4,
-  house = 2,
-  terrain = 3,
+  apartment = 101,
+  commercial = 202,
+  house_vile = 102,
+  terrain = 108,
 }
 
 export type LocationType = {
@@ -15,7 +15,7 @@ export type LocationType = {
   id: string | number;
   id_judet: number | string;
   nume_judet: string;
-  id_localitate: number;
+  id_localitate: number | string;
   nume_localitate: string;
   tip: number;
   id_zona: string | number;
