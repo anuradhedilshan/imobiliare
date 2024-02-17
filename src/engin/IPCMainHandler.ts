@@ -55,6 +55,8 @@ export async function loadSuggestlocalitate(
     data = s.sugestii;
     return data;
   } catch (e) {
+    console.error(e);
+
     return null;
   }
 }

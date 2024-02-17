@@ -1,4 +1,9 @@
 import fs from 'fs';
+import Logger from './Logger';
+
+const temp = require('temp');
+
+// Automatically track and cleanup files at exit
 
 class JSONWriter {
   private writeStream: fs.WriteStream;
@@ -9,11 +14,17 @@ class JSONWriter {
 
   private FIlename: string;
 
-  constructor(filePath: string, filename: string) {
-    this.FIlename = `${filePath}/.${filename.replace(/[ .]/g, '_')}`;
-    this.writeStream = fs.createWriteStream(this.FIlename, { flags: 'w' });
+  private logger: Logger;
+
+  constructor(filePath: string, filename: string, logger: Logger) {
+    temp.track();
+    this.FIlename = `${filePath}/${filename.replace(/[ .]/g, '_')}`;
+    // this.writeStream = fs.createWriteStream(this.FIlename, { flags: 'w' });
+    this.writeStream = temp.createWriteStream();
     this.writeStream.write('[\n');
     this.isOpen = true;
+    this.logger = logger;
+    this.logger?.warn(`temp file created in ${this.writeStream.path}`);
   }
 
   appendData(data: unknown) {
@@ -35,15 +46,13 @@ class JSONWriter {
     if (this.isOpen) {
       this.writeStream.write('\n]');
       this.writeStream.end();
-      this.writeStream.close();
-      fs.rename(
-        this.FIlename,
-        `${this.FIlename.replace(/^\./, '').replace(/\./g, '_')}.json`,
-        () => {
-          // console.log(`${this.FIlename.replace(/^\./, '')}.json`);
-          // console.log('\nFile Renamed!\n');
-        },
-      );
+      const tempFile = this.writeStream.path;
+      fs.rename(tempFile, this.FIlename, () => {
+        // console.log('file Moved', e);
+        this.logger?.warn(
+          `temp file in <br/> ${this.writeStream.path} moved to <br/> ${this.FIlename}`,
+        );
+      });
       this.isOpen = false;
     }
   }
