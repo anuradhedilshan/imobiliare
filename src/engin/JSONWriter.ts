@@ -14,11 +14,11 @@ class JSONWriter {
 
   private FIlename: string;
 
-  private logger: Logger;
+  private logger: Logger | null;
 
-  constructor(filePath: string, filename: string, logger: Logger) {
+  constructor(filePath: string, filename: string, logger: Logger | null) {
     temp.track();
-    this.FIlename = `${filePath}/${filename.replace(/[ .]/g, '_')}`;
+    this.FIlename = `${filePath}/${filename.replace(/[ .]/g, '_')}.json`;
     // this.writeStream = fs.createWriteStream(this.FIlename, { flags: 'w' });
     this.writeStream = temp.createWriteStream();
     this.writeStream.write('[\n');

@@ -177,7 +177,7 @@ async function startAll(
   }
   ads = Object.entries(ads);
   const titlu = he.decode(aDetaliiTitlu.titlu);
-  const Writer = new JSONWriter(filepath, titlu);
+  const Writer = new JSONWriter(filepath, titlu, logger);
   // send StatusUpdateEvent
   logger?.log(`Got ${total} Ads in ${titlu}`);
   webcontent.reply('dataUpdate', {
