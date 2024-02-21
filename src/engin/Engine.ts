@@ -83,11 +83,14 @@ export async function rafMultiplu(
   formData.append('iSubcategorie', c.toString());
   formData.append('sSortare', 'tl-none');
   formData.append('aLocalizare[]', 'judet');
-  formData.append('aLocalizare[]', `l${l.id_localitate}`);
-  formData.append('aLocalizare[]', `z${l.id_zona ? l.id_zona : ''}`);
+  formData.append(
+    'aLocalizare[]',
+    l.id_localitate === '' ? '' : `l${l.id_localitate}`,
+  );
+  formData.append('aLocalizare[]', l.id_zona === '' ? '' : `z${l.id_zona}`);
   formData.append('date_cautator[tDataLimitaInregistrareLicitatie]', '2162');
   formData.append('date_cautator[b_cautare_tranzactie_val]', t.toString());
-  formData.append('date_cautator[b_cautare_id_hidden]', '136058704');
+  formData.append('date_cautator[b_cautare_id_hidden]', '70155546');
   formData.append('tDataLimitaInregistrareLicitatie', '2162');
   formData.append('date_cautator[b_cautator_categorie_radio]', c.toString());
 
@@ -133,8 +136,21 @@ function setLoggerCallback(cb: CB): Logger {
   return logger;
 }
 
+function getHeaders(p: string, t: string, location: string) {
+  const header = `"date" : "${new Date().toISOString()}",\n"property type" : "${p}" , \n "transaction type" :"${t}" , \n "location" : "${location}" \n`;
+  return header;
+}
 // startAll
-
+const P = {
+  '101': 'apartment',
+  '102': 'house_vile',
+  '108': 'terrain',
+  '202': 'commercial',
+};
+const T = {
+  '1': 'Devânzare',
+  '2': 'Deînchiriat',
+};
 async function startAll(
   webcontent: IpcMainEvent,
   {
@@ -176,6 +192,7 @@ async function startAll(
     return;
   }
   ads = Object.entries(ads);
+
   const titlu = he.decode(aDetaliiTitlu.titlu);
   const Writer = new JSONWriter(filepath, titlu, logger);
   // send StatusUpdateEvent
@@ -188,6 +205,12 @@ async function startAll(
     filename: `${titlu}.json`,
   });
   let failedReq: string[] = [];
+  const jsonHeader = getHeaders(
+    P[filters.proprietate],
+    T[filters.tranzactie],
+    filters.localitate.nume,
+  );
+  Writer.writeHeader(jsonHeader);
   // Runner
   for (let loop = 0; loop <= ads.length + Thread; loop += Thread) {
     logger?.warn(`Total : ${ads.length} -  loop :  ${loop}`);
@@ -198,6 +221,7 @@ async function startAll(
     let a: any = null;
 
     a = ads.slice(loop, loop + Thread);
+
     logger?.log(`${failedReq.length} : requets failed *retring* `);
     if (failedReq.length > 0) a = a.concat(failedReq);
     logger?.log(`After concat  : ${a.length}  have to send`);
@@ -208,6 +232,7 @@ async function startAll(
     const proxy = await proxylist.getProxy();
     for (const i of a) {
       await sleep(100);
+      logger?.log(`pushed ${i}`);
       promises.push(
         proxy
           .fetch(getAnunturiUrl(i[1].a), headers)

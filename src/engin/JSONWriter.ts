@@ -18,13 +18,24 @@ class JSONWriter {
 
   constructor(filePath: string, filename: string, logger: Logger | null) {
     temp.track();
-    this.FIlename = `${filePath}/${filename.replace(/[ .]/g, '_')}.json`;
+    this.FIlename = `${filePath}/${filename.replace(
+      /[^a-zA-Z0-9]/g,
+      '_',
+    )}.json`;
     // this.writeStream = fs.createWriteStream(this.FIlename, { flags: 'w' });
     this.writeStream = temp.createWriteStream();
-    this.writeStream.write('[\n');
+    this.writeStream.write('{\n');
     this.isOpen = true;
     this.logger = logger;
     this.logger?.warn(`temp file created in ${this.writeStream.path}`);
+  }
+
+  writeHeader(data: string) {
+    if (!this.isOpen) {
+      throw new Error('JSONWriter is closed. Cannot append data.');
+    }
+
+    this.writeStream.write(`${data}, \n "data" : [`); // Ensure items are stringified with proper indentation (null, 2)
   }
 
   appendData(data: unknown) {
@@ -44,7 +55,7 @@ class JSONWriter {
 
   close() {
     if (this.isOpen) {
-      this.writeStream.write('\n]');
+      this.writeStream.write('\n]}');
       this.writeStream.end();
       const tempFile = this.writeStream.path;
       fs.rename(tempFile, this.FIlename, () => {
