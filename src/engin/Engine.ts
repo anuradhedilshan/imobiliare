@@ -21,6 +21,7 @@ import Logger from './Logger';
 import JSONWriter from './JSONWriter';
 import ProxyList from '../proxy';
 import Proxy from '../proxy/Proxy';
+import { JUDETS, rafMultipluLoc, rafMultiplugetID } from './GetAll';
 
 let logger: Logger | null = null;
 function sleep(ms: number): Promise<unknown> {
@@ -276,4 +277,135 @@ async function startAll(
   }, 10000);
 }
 
-export { startAll, setLoggerCallback };
+async function startAlloverContry(
+  webcontent: IpcMainEvent,
+  {
+    filters,
+    filepath,
+  }: {
+    filters: filterDataType;
+    filepath: string;
+  },
+  onEvent: CB,
+  proxylist: ProxyList,
+) {
+  logger?.warn(`Prosess Started... Start ALL Over`);
+  logger?.warn(`Prosess Started...`);
+  const Writer = new JSONWriter(filepath, 'alloverCountry', logger);
+  let count = 0;
+  // getAdsCount
+  for (const judet of JUDETS) {
+    logger?.warn(`fetching ${judet.judet_name}`);
+    const id = await rafMultipluLoc(judet.judet_name, logger);
+    if (id === null) {
+      logger?.error(`id Null in ${judet.id}:${judet.judet_name}`);
+      // eslint-disable-next-line no-continue
+      continue;
+    }
+    const iIdCautare = await rafMultiplugetID(
+      filters.tranzactie,
+      filters.proprietate,
+      id,
+      logger,
+    );
+
+    const p = await proxylist.getProxy();
+
+    let ads: any[] = await getAnunturisHarta(iIdCautare, p);
+    // if (!ads) {
+    //   logger?.error('getAdsCount Failed In Engine.ts');
+    //   webcontent.reply('dataUpdate', {
+    //     total: 'n/A',
+    //     titlu: `Get All over Country - ${judet.judet_name}`,
+    //     categorie: 'N/A',
+    //     tranzactie: 'N/A',
+    //     filename: 'N/A',
+    //   });
+    //   onEvent('complete', 'Failed');
+    //   return;
+    // }
+    ads = Object.entries(ads);
+
+    // send StatusUpdateEvent
+    logger?.log(`Got ${ads.length} Ads in ${judet.judet_name}`);
+    webcontent.reply('dataUpdate', {
+      total: ads.length,
+      titlu: `judget-${judet.judet_name}`,
+      categorie: filters.proprietate,
+      tranzactie: filters.tranzactie,
+      filename: `alloverCountry.json`,
+    });
+    let failedReq: string[] = [];
+    const jsonHeader = getHeaders(
+      P[filters.proprietate],
+      T[filters.tranzactie],
+      filters.localitate.nume,
+    );
+    Writer.writeHeader(jsonHeader);
+    // Runner
+    for (let loop = 0; loop <= ads.length + Thread; loop += Thread) {
+      logger?.warn(`Total : ${ads.length} -  loop :  ${loop}`);
+      await sleep(10);
+      const promises = [];
+      let failed = 0;
+      const Data: any[] = [];
+      let a: any = null;
+
+      a = ads.slice(loop, loop + Thread);
+
+      logger?.log(`${failedReq.length} : requets failed *retring* `);
+      if (failedReq.length > 0) a = a.concat(failedReq);
+      logger?.log(`After concat  : ${a.length}  have to send`);
+      failedReq = [];
+      if (a.length === 0) break;
+
+      // get Random proxy
+      const proxy = await proxylist.getProxy();
+      for (const i of a) {
+        await sleep(100);
+        logger?.log(`pushed ${i}`);
+        promises.push(
+          proxy
+            .fetch(getAnunturiUrl(i[1].a), headers)
+            .then(({ data, status }: AxiosResponse) => {
+              // logger?.log(`${count} : got ${i.id} - ${status}`);
+              if (status !== 200 || data.status !== 'success')
+                throw new Error(`${i.id} requests failed`);
+              delete data.data.poze;
+              Data.push(data.data);
+              count += 1;
+              return i.id;
+            })
+            .catch((e: AxiosError) => {
+              logger?.error(`Reqest Failed ${i.id} : ${e.message}`);
+              if (e.response?.status !== 400) {
+                failed += 1;
+                failedReq.push(i);
+                proxy.setWait();
+              }
+            }),
+        );
+      }
+
+      await Promise.all(promises);
+      logger?.log(`Got ${count} ads`);
+      // onEvent('progress', Math.round((count / total) * 100));
+      Writer.appendData(Data);
+      if (failedReq.length > 0) {
+        logger?.error(`${failedReq.length} Ad got Failed Retry Latter`);
+        logger?.error('Proccess Failed');
+      }
+    }
+    Writer.close();
+    logger?.log('Wait...........');
+    onEvent('progress', 100);
+    setTimeout(() => {
+      onEvent('progress', 200);
+      onEvent('complete', 'done');
+      logger?.log('DOne.......');
+      logger?.log(`file Saved in ${filepath}`);
+    }, 10000);
+  }
+}
+
+export { startAll, setLoggerCallback, startAlloverContry };

@@ -5,7 +5,12 @@ import { ipcMain, BrowserWindow, IpcMainEvent, dialog } from 'electron';
 import he from 'he';
 import { LocationType, filterDataType } from '../renderer/filter/types.d';
 import { CB } from './types';
-import { rafMultiplu, setLoggerCallback, startAll } from './Engine';
+import {
+  rafMultiplu,
+  setLoggerCallback,
+  startAll,
+  startAlloverContry,
+} from './Engine';
 import Logger from './Logger';
 import ProxyList from '../proxy';
 import Proxy from '../proxy/Proxy';
@@ -111,7 +116,14 @@ class IPCMainHandler {
       return;
     }
     try {
-      if (!this.running) startAll(_e, arg, this.f, this.Pl);
+      if (!this.running) {
+        if (arg.filters.localitate.id_localitate === 9999999) {
+          this.logger.log('startAll');
+          startAlloverContry(_e, arg, this.f, this.Pl);
+        } else {
+          startAll(_e, arg, this.f, this.Pl);
+        }
+      }
       this.running = true;
     } catch (e) {
       this.logger.error(`StartALl rejected due to ${e}`);

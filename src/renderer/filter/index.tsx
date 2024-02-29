@@ -78,7 +78,7 @@ const getAllOverCountryOption: LocationType = {
   id: '',
   nume: 'Get All Over Country',
   nume_localitate: 'Get All Over Country',
-  id_localitate: '',
+  id_localitate: 9999999,
   id_judet: '',
   nume_judet: '',
   tip: 0,
