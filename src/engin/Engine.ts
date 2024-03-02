@@ -391,23 +391,24 @@ async function startAlloverContry(
 
       await Promise.all(promises);
       logger?.log(`Got ${count} ads`);
-      // onEvent('progress', Math.round((count / total) * 100));
       Writer.appendData(Data);
       if (failedReq.length > 0) {
         logger?.error(`${failedReq.length} Ad got Failed Retry Latter`);
         logger?.error('Proccess Failed');
       }
     }
-    Writer.close();
-    logger?.log('Wait...........');
-    onEvent('progress', 100);
-    setTimeout(() => {
-      onEvent('progress', 200);
-      onEvent('complete', 'done');
-      logger?.log('DOne.......');
-      logger?.log(`file Saved in ${filepath}`);
-    }, 10000);
+    count += 1;
+    onEvent('progress', Math.round((count / 46) * 100));
   }
+  Writer.close();
+  logger?.log('Wait...........');
+  onEvent('progress', 100);
+  setTimeout(() => {
+    onEvent('progress', 200);
+    onEvent('complete', 'done');
+    logger?.log('DOne.......');
+    logger?.log(`file Saved in ${filepath}`);
+  }, 10000);
 }
 
 export { startAll, setLoggerCallback, startAlloverContry };
