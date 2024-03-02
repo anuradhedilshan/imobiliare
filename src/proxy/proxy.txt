@@ -13,3 +13,9 @@ http://bobsqalq:aheiwvfphsoz@45.94.47.66:8110
 
 
 //test
+
+
+date_cautator%5Bb_cautare_tranzactie_val%5D=1&date_cautator%5Bb_cautator_categorie_radio%5D=101&date_cautator%5Bb_cautare_id_hidden%5D=339036930
+
+
+date_cautator%5Bb_cautare_tranzactie_val%5D=1&date_cautator%5Bb_cautator_categorie_radio%5D=101&date_cautator%5Bb_cautare_id_hidden%5D=339036930
