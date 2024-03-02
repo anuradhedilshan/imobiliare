@@ -292,16 +292,23 @@ async function startAlloverContry(
   logger?.warn(`Prosess Started... Start ALL Over`);
   logger?.warn(`Prosess Started...`);
   const Writer = new JSONWriter(filepath, 'alloverCountry', logger);
+  const jsonHeader = getHeaders(
+    P[filters.proprietate],
+    T[filters.tranzactie],
+    filters.localitate.nume,
+  );
+  Writer.writeHeader(jsonHeader);
   let count = 0;
   // getAdsCount
   for (const judet of JUDETS) {
     logger?.warn(`fetching ${judet.judet_name}`);
-    const id = await rafMultipluLoc(judet.judet_name, logger);
+    const id = await rafMultipluLoc(judet.id, logger);
     if (id === null) {
       logger?.error(`id Null in ${judet.id}:${judet.judet_name}`);
       // eslint-disable-next-line no-continue
       continue;
     }
+
     const iIdCautare = await rafMultiplugetID(
       filters.tranzactie,
       filters.proprietate,
@@ -336,12 +343,7 @@ async function startAlloverContry(
       filename: `alloverCountry.json`,
     });
     let failedReq: string[] = [];
-    const jsonHeader = getHeaders(
-      P[filters.proprietate],
-      T[filters.tranzactie],
-      filters.localitate.nume,
-    );
-    Writer.writeHeader(jsonHeader);
+    // eslint-disable-next-line no-continue
     // Runner
     for (let loop = 0; loop <= ads.length + Thread; loop += Thread) {
       logger?.warn(`Total : ${ads.length} -  loop :  ${loop}`);

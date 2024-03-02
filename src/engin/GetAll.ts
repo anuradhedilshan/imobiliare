@@ -192,7 +192,7 @@ export const JUDETS = [
 export async function rafMultipluLoc(l: string, logger: Logger | null) {
   const url = 'https://www.imobiliare.ro/lista/raf-multiplu';
   const formData = new FormData();
-  formData.append('iIdCautare', '339036867');
+  formData.append('iIdCautare', '70155546');
   formData.append('b_cautator_locatie_id', l);
   logger?.log(new URLSearchParams(formData as any).toString());
   try {
@@ -207,7 +207,9 @@ export async function rafMultipluLoc(l: string, logger: Logger | null) {
     logger?.warn(`rafMultipluLoc post url : <br/> ${url}`);
     if (data.redirectLista) {
       const urlA = new URL(data.url);
+
       const id = urlA.searchParams.get('id');
+
       return id;
     }
     return null;
