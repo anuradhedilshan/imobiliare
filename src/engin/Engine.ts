@@ -291,7 +291,9 @@ async function startAlloverContry(
 ) {
   logger?.warn(`Prosess Started... Start ALL Over`);
   logger?.warn(`Prosess Started...`);
-  const Writer = new JSONWriter(filepath, 'alloverCountry', logger);
+
+  const ilename = `${Proprietate[filters.proprietate]}_${Tranzactie[filters.tranzactie]}_alloverCountry`;
+  const Writer = new JSONWriter(filepath, ilename, logger);
   const jsonHeader = getHeaders(
     P[filters.proprietate],
     T[filters.tranzactie],
@@ -299,6 +301,7 @@ async function startAlloverContry(
   );
   Writer.writeHeader(jsonHeader);
   let count = 0;
+  let Jcount = 0;
   // getAdsCount
   for (const judet of JUDETS) {
     logger?.warn(`fetching ${judet.judet_name}`);
@@ -340,7 +343,7 @@ async function startAlloverContry(
       titlu: `judget-${judet.judet_name}`,
       categorie: filters.proprietate,
       tranzactie: filters.tranzactie,
-      filename: `alloverCountry.json`,
+      filename: `${ilename}.json`,
     });
     let failedReq: string[] = [];
     // eslint-disable-next-line no-continue
@@ -397,8 +400,8 @@ async function startAlloverContry(
         logger?.error('Proccess Failed');
       }
     }
-    count += 1;
-    onEvent('progress', Math.round((count / 46) * 100));
+    Jcount += 1;
+    onEvent('progress', Math.round((Jcount / JUDETS.length) * 100));
   }
   Writer.close();
   logger?.log('Wait...........');
