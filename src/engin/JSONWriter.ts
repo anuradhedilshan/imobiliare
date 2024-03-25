@@ -58,12 +58,27 @@ class JSONWriter {
       this.writeStream.write('\n]}');
       this.writeStream.end();
       const tempFile = this.writeStream.path;
-      fs.rename(tempFile, this.FIlename, () => {
-        // console.log('file Moved', e);
-        this.logger?.warn(
-          `temp file in <br/> ${this.writeStream.path} moved to <br/> ${this.FIlename}`,
-        );
+      fs.copyFile(tempFile, this.FIlename, (err) => {
+        if (err) {
+          this.logger?.error(`Error copying file:${err}`);
+          // Handle error appropriately
+        } else {
+          // File copied successfully
+          fs.unlink(tempFile, (unlinkErr) => {
+            if (unlinkErr) {
+              this.logger?.error(`Error deleting temporary file:${unlinkErr}`);
+              // Handle error appropriately
+            } else {
+              // Temporary file deleted successfully
+              this.logger?.warn(
+                `temp file in <br/> ${this.writeStream.path} moved to <br/> ${this.FIlename}`,
+              );
+              this.isOpen = false;
+            }
+          });
+        }
       });
+
       this.isOpen = false;
     }
   }
