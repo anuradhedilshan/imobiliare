@@ -62,6 +62,7 @@ class JSONWriter {
         if (err) {
           this.logger?.error(`Error copying file:${err}`);
           // Handle error appropriately
+          this.logger?.log(`Error copying file:${err}`);
         } else {
           // File copied successfully
           fs.unlink(tempFile, (unlinkErr) => {
