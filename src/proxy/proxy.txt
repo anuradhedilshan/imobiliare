@@ -8,10 +8,7 @@ http://bobsqalq:aheiwvfphsoz@188.74.210.207:6286
 http://bobsqalq:aheiwvfphsoz@188.74.183.10:8279
 http://bobsqalq:aheiwvfphsoz@188.74.210.21:6100
 http://bobsqalq:aheiwvfphsoz@45.155.68.129:8133
-http://bobsqalq:aheiwvfphsoz@154.95.36.199:6893
-http://bobsqalq:aheiwvfphsoz@45.94.47.66:8110
-
-
+v
 //test
 
 

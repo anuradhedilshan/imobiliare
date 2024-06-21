@@ -29,7 +29,7 @@ function sleep(ms: number): Promise<unknown> {
 }
 
 const headers: RawAxiosRequestHeaders = {
-  uuid: 'efbc128b-0ad7-44b5-86fc-fe409aebffc7',
+  uuid: '9b2864d5-473c-419c-a332-ce425c6b1e1d',
   soapp: 'android',
   rmkey: '231jkda5fab#sGSf!xPt@',
   'accept-encoding': 'gzip',
