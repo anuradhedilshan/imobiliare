@@ -109,17 +109,6 @@ export default function Filter() {
     event: ChangeEvent<HTMLInputElement> | SelectChangeEvent<string | null>,
   ) => {
     setFilter({ ...filter, [event.target.name]: event.target.value });
-
-    // tslint:disable-next-line
-    if (event.target.value === Proprietate.commercial.toString()) {
-      console.log('proprty');
-
-      setFilter({
-        ...filter,
-        [event.target.name]: event.target.value,
-        subcategorie: Subcategorie.All,
-      });
-    }
   };
   const handler1 = (value: LocationType) => {
     setFilter({ ...filter, localitate: value });
@@ -160,6 +149,7 @@ export default function Filter() {
   };
 
   const [openState, setOpen] = useState(false);
+  console.log(filter.proprietate, Proprietate.commercial);
 
   return (
     <Paper>
@@ -243,9 +233,6 @@ export default function Filter() {
                 variant="standard"
                 label="Introdu localitate, zone, ansambluri"
               >
-                <MenuItem key={9999} value={9999}>
-                  All
-                </MenuItem>
                 {Object.entries(subcategorieObject).map((key) => (
                   <MenuItem key={key[1]} value={key[1]}>
                     {key[0]}

@@ -4,7 +4,7 @@
 import { ipcMain, BrowserWindow, IpcMainEvent, dialog } from 'electron';
 import he from 'he';
 import { LocationType, filterDataType } from '../renderer/filter/types.d';
-import { CB } from './types';
+import { CB, Proprietate, Subcategorie } from './types';
 import {
   rafMultiplu,
   setLoggerCallback,
@@ -64,6 +64,15 @@ export async function loadSuggestlocalitate(
   }
 }
 
+const subcategorieObject = {
+  Birouri: Subcategorie.Birouri,
+  HoteluriPensiuni: Subcategorie.HoteluriPensiuni,
+  SpatiiComerciale: Subcategorie.SpatiiComerciale,
+  TerenuriInvestitii: Subcategorie.TerenuriInvestitii,
+  SpatiiIndustriale: Subcategorie.SpatiiIndustriale,
+  ProprietatiSpeciale: Subcategorie.ProprietatiSpeciale,
+};
+
 class IPCMainHandler {
   private mainWindow: BrowserWindow | null;
 
@@ -110,7 +119,7 @@ class IPCMainHandler {
     _e: IpcMainEvent,
     arg: { filters: filterDataType; filepath: string },
   ): void {
-    this.logger.log(`startall : ${arg}`);
+    this.logger.log(`starting : ${arg}`);
     if (this.Pl.getProxyCount() <= 0) {
       this.logger.error('no any proxy');
       return;
@@ -118,13 +127,14 @@ class IPCMainHandler {
     try {
       if (!this.running) {
         if (arg.filters.localitate.id_localitate === 9999999) {
-          this.logger.log('startAll');
+          this.logger.log('startAll_overcountry');
           startAlloverContry(_e, arg, this.f, this.Pl);
         } else {
+          this.logger.log('StartAll');
           startAll(_e, arg, this.f, this.Pl);
         }
       }
-      this.running = true;
+      // this.running = true;
     } catch (e) {
       this.logger.error(`StartALl rejected due to ${e}`);
     }
@@ -151,21 +161,23 @@ class IPCMainHandler {
     return working;
   }
 
-  async getDataStatus(_e: IpcMainEvent, filter: filterDataType) {
+  async getDataStatus(_e: IpcMainEvent, filters: filterDataType) {
     try {
       const multiplu = await rafMultiplu(
-        filter.tranzactie,
-        filter.proprietate,
-        filter.localitate,
+        filters.tranzactie,
+        Subcategorie.Birouri,
+        filters.proprietate,
+        filters.localitate,
       );
+
       if (multiplu) {
         const { iIdCautare, aDetaliiTitlu, total } = multiplu;
-        const titlu = he.decode(aDetaliiTitlu.titlu);
+        const titlu = he.decode(aDetaliiTitlu);
         _e.reply('dataUpdate', {
-          total,
+          total: ` ${filters.localitate.id_localitate === 9999999 || filters.subcategorie === Subcategorie.All ? 'cannot calculate' : total}`,
           titlu,
-          categorie: filter.proprietate,
-          tranzactie: filter.tranzactie,
+          categorie: filters.proprietate,
+          tranzactie: filters.tranzactie,
           filename: `iIdCautare : ${iIdCautare}`,
         });
       } else {

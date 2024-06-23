@@ -1,6 +1,7 @@
-import axios from 'axios';
+import axios, { RawAxiosRequestHeaders } from 'axios';
 import { Tranzactie, Proprietate } from './types';
 import Logger from './Logger';
+import { filterDataType } from '../renderer/filter/types.d';
 
 export const JUDETS = [
   {
@@ -189,34 +190,31 @@ export const JUDETS = [
   },
 ];
 
-export async function rafMultipluLoc(l: string, logger: Logger | null) {
-  const url = 'https://www.imobiliare.ro/lista/raf-multiplu';
-  const formData = new FormData();
-  formData.append('iIdCautare', '70155546');
-  formData.append('b_cautator_locatie_id', l);
-  logger?.log(new URLSearchParams(formData as any).toString());
+export async function rafMultipluLoc(
+  l: string,
+  headers: RawAxiosRequestHeaders,
+  filters: filterDataType,
+  logger: Logger | null,
+) {
+  const url = `https://apirm.imobiliare.ro/2.2/anunturi?localitati=${l}&subcategorie=${filters.subcategorie}&categorie=${filters.proprietate}&offset=0&sortare=sctl&tranzactie=${filters.tranzactie}&limit=0`;
+  logger?.log(url);
   try {
-    const { status, data } = await axios.post(url, formData, {
-      headers: {
-        'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        'user-agent':
-          'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-      },
+    const { status, data } = await axios.get(url, {
+      headers,
     });
     if (status !== 200) throw new Error('request failed');
-    logger?.warn(`rafMultipluLoc post url : <br/> ${url}`);
-    if (data.redirectLista) {
-      const urlA = new URL(data.url);
+    logger?.warn(`rafMultipluLoc hit url : <br/> ${url}`);
 
-      const id = urlA.searchParams.get('id');
-
-      return id;
-    }
-    return null;
+    return {
+      iIdCautare: data.data.id_lista,
+      aDetaliiTitlu: data.data.titlu,
+      total: data.data.total,
+      id_vizitator: data.data.id_vizitator,
+    };
   } catch (e) {
     // console.error(e);
 
-    logger?.error(`Reqest tried 3 times due to : <b>${e}</b> @rafMultipluLoc`);
+    logger?.error(`Reqest tried 3 times due to : <b>${e}</b> @getAnunturis`);
     return null;
   }
 }
