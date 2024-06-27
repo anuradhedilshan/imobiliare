@@ -18,7 +18,7 @@ export type LocationType = {
   id_localitate: number | string;
   nume_localitate: string;
   tip: number;
-  id_zona: string | number;
+  id_zona?: string | number | undefined;
 };
 
 export enum Subcategorie {

@@ -30,9 +30,10 @@ function parseLog(
   type: 'error' | 'warn' | 'details',
   message: string | number,
 ) {
-  return `   <span class='${type} log'><span align="left" style="color:grey">${formatDate(
+  const a = `   <span class='${type} log'><span align="left" style="color:grey">${formatDate(
     new Date(),
   )} : </span> ${message}</span> <br />`;
+  return a;
 }
 
 const intialStatus = {
@@ -81,6 +82,8 @@ export default function Dataview() {
   window.IPCMainHandler.onStatus = (arg: any) => {
     setStatus(arg);
   };
+  console.log(logger);
+
   return (
     <Paper>
       <Card sx={{ maxWidth: '490px', minWidth: '460px', height: '96vh' }}>

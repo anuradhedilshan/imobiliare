@@ -80,7 +80,7 @@ export async function rafMultiplu(
   c: Proprietate,
   l: LocationType,
 ) {
-  const url = `https://apirm.imobiliare.ro/2.2/anunturi?localitati=${l.id_localitate}&subcategorie=${S}&categorie=${c}&offset=0&sortare=sctl&tranzactie=${t}&limit=0`;
+  const url = `https://apirm.imobiliare.ro/2.2/anunturi?localitati=${l.id_localitate}&subcategorie=${S}&categorie=${c}&offset=0&sortare=sctl&tranzactie=${t}&limit=0&zone=${l.id_zona ? l.id_zona : 0}`;
   logger?.log(url);
   try {
     const { status, data } = await axios.get(url, {
@@ -176,8 +176,8 @@ async function startAll(
   );
   Writer.writeHeader(jsonHeader);
   for (const subcat of sub) {
-    logger?.log(`subcategorie -> ${subcat}`);
-
+    logger?.log(`subcategorie - ${subcat}`);
+    await sleep(1000);
     const multiplu = await rafMultiplu(
       filters.tranzactie,
       subcat,
@@ -322,7 +322,8 @@ async function startAlloverContry(
   for (const judet of JUDETS) {
     logger?.warn(`fetching ${judet.judet_name}`);
     for (const subcat of sub) {
-      logger?.log(`subcategorie -> ${subcat}`);
+      logger?.log(`subcategorie -- ${subcat}`);
+      await sleep(1000);
       filters.subcategorie = subcat;
       const d = await rafMultipluLoc(judet.id, headers, filters, logger);
       if (d === null) {

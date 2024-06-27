@@ -174,7 +174,7 @@ class IPCMainHandler {
         const { iIdCautare, aDetaliiTitlu, total } = multiplu;
         const titlu = he.decode(aDetaliiTitlu);
         _e.reply('dataUpdate', {
-          total: ` ${(filters.proprietate as unknown as string) === Proprietate.commercial.toString() ? 'cannot calculate' : total}`,
+          total: ` ${filters.subcategorie === Subcategorie.All ? 'cannot calculate' : total}`,
           titlu,
           categorie: filters.proprietate,
           tranzactie: filters.tranzactie,
