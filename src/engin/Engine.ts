@@ -169,8 +169,15 @@ async function startAll(
 
   const titlu = `${filters.localitate.nume}_${Proprietate[filters.proprietate]}_${Subcategorie[filters.subcategorie]}_${Tranzactie[filters.tranzactie]}`;
   const Writer = new JSONWriter(filepath, titlu, logger);
+  const jsonHeader = getHeaders(
+    P[filters.proprietate],
+    T[filters.tranzactie],
+    filters.localitate.nume,
+  );
+  Writer.writeHeader(jsonHeader);
   for (const subcat of sub) {
     logger?.log(`subcategorie -> ${subcat}`);
+
     const multiplu = await rafMultiplu(
       filters.tranzactie,
       subcat,
@@ -210,12 +217,6 @@ async function startAll(
       filename: `${titlu}.json`,
     });
     let failedReq: string[] = [];
-    const jsonHeader = getHeaders(
-      P[filters.proprietate],
-      T[filters.tranzactie],
-      filters.localitate.nume,
-    );
-    Writer.writeHeader(jsonHeader);
 
     // Runner
     for (let loop = 0; loop <= ads.length + Thread; loop += Thread) {
