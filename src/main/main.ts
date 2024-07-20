@@ -92,7 +92,8 @@ const createWindow = async () => {
       mainWindow.show();
     }
   });
-  // mainWindow.setMenu(null);
+  const menu = new MenuBuilder(mainWindow);
+  mainWindow.setMenu(menu.buildMenu());
 
   // Cleanup IPCMainHandler when the app is closing
   app.on('before-quit', () => {
