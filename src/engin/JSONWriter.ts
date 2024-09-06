@@ -1,7 +1,6 @@
 import fs from 'fs';
+import path from 'path';
 import Logger from './Logger';
-
-const temp = require('temp');
 
 // Automatically track and cleanup files at exit
 
@@ -17,13 +16,14 @@ class JSONWriter {
   private logger: Logger | null;
 
   constructor(filePath: string, filename: string, logger: Logger | null) {
-    temp.track();
     this.FIlename = `${filePath}/${filename.replace(
       /[^a-zA-Z0-9]/g,
       '_',
     )}.json`;
     // this.writeStream = fs.createWriteStream(this.FIlename, { flags: 'w' });
-    this.writeStream = temp.createWriteStream();
+    const tempFilePath = path.join(filePath, `.${filename}`);
+
+    this.writeStream = fs.createWriteStream(tempFilePath);
     this.writeStream.write('{\n');
     this.isOpen = true;
     this.logger = logger;
